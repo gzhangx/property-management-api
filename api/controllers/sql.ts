@@ -353,9 +353,7 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
       //  sqlArgs.push(auth.code);
       //  return '?';
       //}
-      if (f.formatter) {
-        sqlArgs.push(f.formatter(val));
-      } else if (f.autoValueFunc) {
+      if (f.autoValueFunc) {
         sqlArgs.push(f.autoValueFunc(fields, f, val))
       }
       else {
@@ -383,7 +381,7 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
         {
           const v = fields[mf.field];
           if (v !== undefined) {
-            let formatter = mf.formatter || vmap2;
+            let formatter =  vmap2;
             if (mf.type === 'datetime') {
               formatter = dateStrFormatter as any;
             }

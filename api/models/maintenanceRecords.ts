@@ -9,11 +9,10 @@ export const maintenanceRecords:IDBModel = {
             { field: 'description', desc: 'description:', size: 4096},
             { field: 'amount', desc:'Amount', type: 'decimal', },
             { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' } },
-            { field: 'expenseCategoryId', desc: 'category', foreignKey: { table: 'expenseCategories', field: 'expenseCategoryID' } },
+            { field: 'expenseCategoryId', desc: 'category', foreignKey: { table: 'expenseCategories', field: 'expenseCategoryID' }, required: true, },
             { field: 'hours', desc:'Hours', type: 'decimal' },
             { field: 'workerID', desc: 'Worker Id', type: 'uuid', required: true, foreignKey: { table: 'workerInfo', field: 'workerID' } },
             { field: 'comment', desc: 'comment', size: 4096 },
-            { field: 'vdPosControl', desc: 'PosControl' },
         ],
     view: {
         name: 'view_maintenanceRecords',

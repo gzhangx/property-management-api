@@ -18,7 +18,6 @@ export interface IDBFieldDef {
     ident?: boolean;    
     //isOwnerSecurityParentField?: boolean;
     //key?: 'UNI' | 'PRI' | null;
-    formatter?: (v: PossibleDbTypes) => string;
     autoValueFunc?: (row: { [key: string]: (string | number) }, field: IDBFieldDef, val: PossibleDbTypes) => (string);
     foreignKey?: {
         table: ModelTableNames;
