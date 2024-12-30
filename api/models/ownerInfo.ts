@@ -3,7 +3,7 @@ export const ownerInfo: IDBModel = {
     fields:
         [
             { field: 'userID', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, },
-            { field: 'ownerId', desc: 'Owner Id', required: true, isId: true, },
+            { field: 'ownerID', desc: 'Owner Id', required: true, isId: true, },
             { field: 'ownerName',desc: 'Owner Name', required: true,},
             { field: 'taxName', desc: 'Tax Name' },
             { field: 'taxID', desc: 'SSN', },
