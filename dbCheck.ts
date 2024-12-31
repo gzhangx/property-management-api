@@ -33,15 +33,13 @@ function getTypeFromDef(f: IDBFieldDef) {
     if (f.size) return `varchar(${f.size})`;
     return 'varchar(100)';
 }
-const typeToType = (f: IDBFieldDef, hasPK: boolean) => {
+const typeToType = (f: IDBFieldDef) => {
     let v1 = getTypeFromDef(f);    
-    let isPK = hasPK;
     if (f.ident) {        
-        v1 = `${v1}${hasPK ? '' : ' primary key'}`.trim();
-        isPK = true;
+        v1 = `${v1}`.trim();
     }
     
-    return `${v1}${(f.unique || f.isId) ? ' UNIQUE' : ''}${f.required?' NOT NULL':''}`;
+    return `${v1}${(f.unique) ? ' UNIQUE' : ''}${f.required?' NOT NULL':''}`;
 }
 
 interface ITblColumnRet {
@@ -68,7 +66,7 @@ async function check() {
             console.log(`error query table ${tabName}, creating`)
             console.log( exc.message );
             const createSql=`create table ${tabName} (${curMod.fields.map( f => {
-                return `${f.field} ${typeToType(f, false)} ${pkStr(f)}`
+                return `${f.field} ${typeToType(f)} ${pkStr(f)}`
             } ).join( ',' )})`;
             console.log( createSql );
             await doQuery( createSql );
@@ -97,7 +95,7 @@ async function check() {
         await bluebird.Promise.map(mustExistDateCols, async col => {
             const dbField = dbIds[col.field];
             if (!dbField) {
-                const alterTblSql = `alter table ${tabName} add column ${col.field} ${typeToType(col, false)} ${pkStr(col)} ${col.def ? ' default ' + col.def : ''};`;
+                const alterTblSql = `alter table ${tabName} add column ${col.field} ${typeToType(col)} ${pkStr(col)} ${col.def ? ' default ' + col.def : ''};`;
                 try {
                     await doQuery(alterTblSql);
                     console.log(`alter ${tabName} added ${col.field} ${pkStr(col)}`);
@@ -108,7 +106,7 @@ async function check() {
             } else {
                 const dbType = corrDbType(dbField, false).toLowerCase();                
                 const simpleMyType = getTypeFromDef(col).toLowerCase();
-                const myType = typeToType(col, false).toLowerCase().trim();                
+                const myType = typeToType(col).toLowerCase().trim();                
                 if (dbType !== simpleMyType || (dbField.Key ==='UNI' && col.unique)) {                    
                     const alterTblSql = `alter table ${tabName} modify column ${col.field} ${myType} ${col.def ? ' default ' + col.def : ''};`;
                     console.log(`type diff ${dbType} mytype=${myType}: ${alterTblSql}`);

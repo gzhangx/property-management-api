@@ -1,7 +1,9 @@
-module.exports = {
+
+import { IDBModel } from './types';
+export const importLog: IDBModel = {
     fields:
         [
-            { field: 'userID', type: 'uuid', desc: 'User ID', required: true, isOwnerSecurityField: true, foreignKey: { table: 'userInfo', field: 'userID' }, isId: true, },
+            { field: 'userID', type: 'uuid', desc: 'User ID', required: true, foreignKey: { table: 'userInfo', field: 'userID' }, isId: true, },
             { field: 'id', desc: 'Id', isId: true, required: true, },
             { field: 'source', desc: 'Source'},
             { field: 'start', desc: 'End', type: 'datetime' },
