@@ -309,6 +309,21 @@ interface ICreateUpdateParms {
   doCreate?: boolean;
   doUpdate?: boolean;
 }
+
+function checkUserSecurityField(auth: IUserAuth, f: models.IDBFieldDef, val: models.PossibleDbTypes) {
+  if (isOwnerSecurityField(f)) {
+    if (val && val !== auth.userID) {
+      const error = `Code (${val} from fiel ${f.field} isId=${f.isId}) is not authorized`;
+      console.log(error);
+      throw {
+        message: error,
+        error,
+      }
+    }
+    val = auth.userID;
+  }
+  return val;
+}
 export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUserAuth) {
   const { table, doCreate, doUpdate } = body;
   const fields = body.fields;
@@ -338,17 +353,8 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
            val = idVal;
          }      
          
-         if (isOwnerSecurityField(f)) {           
-           if (val && val !== auth.userID) {
-             const error = `Code (${val} from fiel ${f.field} isId=${f.isId}) is not authorized`;
-             console.log(error);
-             throw {
-               message: error,
-               error,
-             }
-           }
-           val = auth.userID;
-         }
+         val = checkUserSecurityField(auth, f, val);
+         
       //if (f.field === OWNER_SEC_FIELD) {
       //  sqlArgs.push(auth.code);
       //  return '?';
@@ -453,6 +459,14 @@ export async function createOrUpdate(req: Request, res: Response) {
 
 export async function del(req: Request, res: Response) {
   try {
+    const auth = getUserAuth(req);
+    if (!auth) {
+      const message = 'not authorized';
+      return res.json({
+        message,
+        error: message,
+      })
+    }
     const { table, ids } = req.body;
     const model = models.data[table];
     if (!model) {
@@ -467,6 +481,9 @@ export async function del(req: Request, res: Response) {
     const idFields = model.fields.filter(f => f.isId);
     const sqlStr = `delete from ${table} where ${idFields.map(f=>`${f.field}=?`).join(' and ')}`;
 
+    idFields.forEach((f, ind) => {
+      ids[ind] = checkUserSecurityField(auth, f, ids[ind]);
+    })
     console.log(`SQK DEKEKTE sqkStr=${sqlStr}`, ids);
     const rows = await db.doQuery(sqlStr, ids);
     return res.json(rows);
