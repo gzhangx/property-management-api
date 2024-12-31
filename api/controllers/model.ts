@@ -1,5 +1,6 @@
 import {data, IDBFieldDef} from '../models/index';
 import {Request, Response} from 'restify'
+import { isOwnerSecurityField } from './sql';
 async function getModel(req:Request, res:Response) {
   try {
     console.log(`getModel -> ${req.query.name}`);
@@ -13,6 +14,7 @@ async function getModel(req:Request, res:Response) {
     resm.fields = resm.fields.map(f => {
       if (f.autoValueFunc)
         return null;
+      (f as any).userSecurityField = isOwnerSecurityField(f);
       return f;
     }).filter(f => f) as IDBFieldDef[];
     return res.json(resm);

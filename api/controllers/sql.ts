@@ -95,7 +95,7 @@ export function cleanId(id: string): string {
   return id.replace(/[^a-zA-Z0-9-_+@\.]/g, '');
 }
 
-function isOwnerSecurityField(field: models.IDBFieldDef) {
+export function isOwnerSecurityField(field: models.IDBFieldDef) {
   return field.foreignKey && field.foreignKey.table === 'userInfo';
 }
 function getSecAuthWhereCond(fields: models.IDBFieldDef[], auth: IUserAuth) {  
