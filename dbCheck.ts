@@ -51,8 +51,10 @@ interface ITblColumnRet {
     Key: 'PRI' | 'UNI' | null;
     Null: 'YES' | 'NO'
 }
-async function check() {
+
+export async function check() {
     
+    const allErrors: string[] = [];
     await bluebird.Promise.map( tables, async tabName => {
         const columnQry = (() => doQuery(`SHOW COLUMNS FROM ${tabName}`)) as () => Promise<ITblColumnRet[]>;
         const curMod=mod[ tabName ];
@@ -99,8 +101,10 @@ async function check() {
                 try {
                     await doQuery(alterTblSql);
                     console.log(`alter ${tabName} added ${col.field} ${pkStr(col)}`);
-                } catch (err) {                    
-                    console.log(`alter table failed ${alterTblSql} ${(err as any)?.message}`);
+                } catch (err) {    
+                    const errorMsg = `alter table failed ${alterTblSql} ${(err as any)?.message}`;
+                    console.log(errorMsg);
+                    allErrors.push(errorMsg);
                     throw err;
                 }
             } else {
@@ -158,7 +162,9 @@ async function check() {
             try {
                 await doQuery(createViewSql);
             } catch (err: any) {
-                console.log(`${createViewSql} ${err.message}`);
+                const errorMsg = `${createViewSql} ${err.message}`;
+                allErrors.push(errorMsg);
+                console.log(errorMsg);
                 //throw err.message
             }
         }
@@ -167,11 +173,21 @@ async function check() {
     
     
     conn.end();
+
+    const multiIdTables: string[] = [];
+    tables.forEach(tabName => {
+        const curMod = mod[tabName];
+        const allIdFields = curMod.fields.filter(f => f.isId);
+        if (allIdFields.length > 1) {
+            multiIdTables.push(`${tabName}: (${allIdFields.map(f => f.field).join(',')})`);
+        }
+    });
+    console.log(`All multi id tabs`, multiIdTables);
+    if (allErrors.length) {
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!! has errors', allErrors);
+    }
 }
 
-module.exports = {
-    check,
-}
 
 function corrDbType(dbField: ITblColumnRet, addUniqueNotNull: boolean = true) {
     let type = dbField.Type.toLowerCase();
