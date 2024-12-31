@@ -3,6 +3,7 @@ import { IDBModel } from './types';
 export const leaseInfo: IDBModel = {
     fields:
         [
+            { field: 'userID', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, isId: true, },
             { field: 'leaseID', desc: 'Id', type: 'uuid', required: true, isId: true },
             { field: 'deposit', desc: 'Deposit', type: 'decimal' },
             { field: 'petDeposit', desc: 'Pet Deposit', type: 'decimal', def: 0 },
@@ -10,8 +11,7 @@ export const leaseInfo: IDBModel = {
             { field: 'endDate', desc: 'End Date',  type: 'date'},
             { field: 'startDate', desc: 'Start Date',  type: 'date'},
             { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' } },
-            { field: 'tenantID', desc: 'Tenant ID', foreignKey: { table: 'tenantInfo', field: 'tenantID' } },
-            { field: 'userID', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true},
+            { field: 'tenantID', desc: 'Tenant ID', foreignKey: { table: 'tenantInfo', field: 'tenantID' } },            
             { field: 'comment', desc: 'Comment' },
             { field: 'monthlyRent', desc: 'Monthly Rent', required: true, type: 'decimal', },            
         ],

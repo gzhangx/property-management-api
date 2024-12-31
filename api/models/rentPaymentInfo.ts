@@ -2,8 +2,9 @@ import moment from 'moment';
 import { IDBModel } from './types';
 export const rentPaymentInfo: IDBModel = {
     fields:
-        [
+        [            
             { field: 'paymentID', desc: 'Id', type: 'uuid', required: true, unique: true, isId: true },
+            { field: 'userID', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, },
             { field: 'receivedDate', desc: 'Received Date', type: 'datetime' },
             { field: 'receivedAmount', desc: 'Received Amount', type: 'decimal' },
             { field: 'paidBy', desc: 'Paid By', },
@@ -11,8 +12,7 @@ export const rentPaymentInfo: IDBModel = {
             { field: 'month', desc: 'Month', autoValueFunc: row => moment(row['date']).format('YYYY-MM') },
             { field: 'paymentTypeName', desc: 'PaymentType'},
             //{ field: 'leaseID', desc: 'Lease ID', foreignKey: {table: 'leaseInfo', field:'leaseID'}},
-            { field: 'houseID', desc: 'House', foreignKey: { table: 'houseInfo', field: 'houseID' } },
-            { field: 'userID', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true,},
+            { field: 'houseID', desc: 'House', foreignKey: { table: 'houseInfo', field: 'houseID' } },            
             { field: 'paymentProcessor', desc: 'Processor', },
         ],
         view:{

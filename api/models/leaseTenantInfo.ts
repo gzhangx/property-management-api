@@ -2,10 +2,10 @@ import { IDBModel } from './types';
 export const leaseTenantInfo:IDBModel = {
     fields:
         [
+            { field: 'userID', type: 'uuid', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, isId: true, },
             { field: 'id', desc: 'Id', type: 'uuid', isId: true, },
             { field: 'tenantID', desc: 'Tenant Id', type: 'uuid', required: true, foreignKey: { table: 'tenantInfo', field: 'tenantID' } },            
-            { field: 'leaseID', desc: 'Lease ID', required: true, foreignKey: { table: 'leaseInfo', field: 'leaseID' } },
-            { field: 'userID', type: 'int', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, def:'0'},
+            { field: 'leaseID', desc: 'Lease ID', required: true, foreignKey: { table: 'leaseInfo', field: 'leaseID' } },            
         ],
         view:{
             name: 'view_leaseTenantInfo',

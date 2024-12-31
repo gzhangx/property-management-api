@@ -3,12 +3,12 @@ import moment from 'moment';
 export const maintenanceRecords:IDBModel = {
     fields:
         [
+            { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' }, isId: true, },
             { field: 'maintenanceID', desc: 'Id' , type: 'uuid', required: true, isId: true},
             { field: 'date', desc: 'date', type: 'date' },
             { field: 'month', desc: 'month', autoValueFunc: row => moment(row['date']).format('YYYY-MM') }, //dontShowOnEdit: true, 
             { field: 'description', desc: 'description:', size: 4096},
             { field: 'amount', desc:'Amount', type: 'decimal', },
-            { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' } },
             { field: 'expenseCategoryId', desc: 'category', foreignKey: { table: 'expenseCategories', field: 'expenseCategoryID' }, required: true, },
             { field: 'hours', desc:'Hours', type: 'decimal' },
             { field: 'workerID', desc: 'Worker Id', type: 'uuid', required: true, foreignKey: { table: 'workerInfo', field: 'workerID' } },
