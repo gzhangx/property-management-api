@@ -382,7 +382,8 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
     }
     const { idFields, values } = model.fields.reduce((acc, mf) => {
       if (mf.isId) {
-        acc.idFields.push({ name: mf.field, value: fields[mf.field] });
+        const v = checkUserSecurityField(auth, mf, fields[mf.field]);
+        acc.idFields.push({ name: mf.field, value: v });
       } else if (!isOwnerSecurityField(mf)){
         {
           const v = fields[mf.field];
