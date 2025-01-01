@@ -98,14 +98,14 @@ export function cleanId(id: string): string {
 export function isOwnerSecurityField(field: models.IDBFieldDef) {
   return field.foreignKey && field.foreignKey.table === 'userInfo';
 }
-function getSecAuthWhereCond(fields: models.IDBFieldDef[], auth: IUserAuth) {  
-  const res = fields.reduce((acc, f) => {
+function getSecAuthWhereCond(fields: models.IDBFieldDef[], auth: IUserAuth, whereCondition: string[], whereValues: models.PossibleDbTypes[]) {  
+  const res = fields.forEach((f) => {
     if (isOwnerSecurityField(f)) {      
-      return ` ${f.field} = '${auth.userID}'`;            
+      whereCondition.push(` ${f.field} =?`);
+      whereValues.push(auth.userID);
     }    
-    return acc;
-  }, '');  
-  return res;
+  });  
+  return;
 }
 export async function doSqlGetInternal(auth: IUserAuth, sqlReq: ISqlRequest) {
   //joins:{ table:{col:als}}
@@ -226,8 +226,7 @@ export async function doSqlGetInternal(auth: IUserAuth, sqlReq: ISqlRequest) {
       prms: [],
     } as IInternalWherePrm);
     
-    const secCond = getSecAuthWhereCond(model.fields, auth);
-    if (secCond) whereRed.whr.push(secCond);
+    getSecAuthWhereCond(model.fields, auth, whereRed.whr, whereRed.prms);    
     if (whereRed.whr.length) {
       whereStr = ` where ${whereRed.whr.join(' and ')}`;
     }
@@ -414,9 +413,12 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
     idVal = idFields;
     //const setValMap = v => `${v.name}=${v.value}`;
     const setValMap = (v: INameVal) => `${v.name}=?`;
-    const whereCond = idFields.map(idField=>`${idField.name}=${vmap(idField.value)}`);
-    const secCond = getSecAuthWhereCond(model.fields, auth);
-    if (secCond) whereCond.push(secCond);
+    const whereValues: models.PossibleDbTypes[] = [];
+    const whereCond = idFields.map(idField => {
+      whereValues.push(idField.value);
+      return `${idField.name}=?`;
+    });
+    getSecAuthWhereCond(model.fields, auth, whereCond, whereValues);    
 
     const valueUpdatePairs = `${values.map(v => setValMap(v)).join(',')},modified=NOW()`;
     if (doCreate) {
@@ -424,7 +426,7 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
       sqlArgs = sqlArgs.concat(values.map(v => v.value));
     } else {
       sqlStr = `update ${table} set ${valueUpdatePairs} where ${whereCond.join(' and ')}`;      
-      sqlArgs = values.map(v => v.value);
+      sqlArgs = values.map(v => v.value).concat(whereValues);
     }    
   }
 
