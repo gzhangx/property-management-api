@@ -1,3 +1,4 @@
+/*
 import moment from 'moment';
 import * as bluebird from 'bluebird';
 const csvParse = require('csv-parse/sync');
@@ -170,24 +171,7 @@ export async function doJob(pupp: IPuppWrapper, opts: IPuppOpts): Promise<IBoaDo
         log(`at ${position} ${txt} ${val}`);
         return false;
     }, 'Selection tran date');
-    /*
-    const tranDropdown = await waitAndFindOneCss(tranSelSel);
-    const options = await tranDropdown.$$('option');
-    let secondVal = null;
-    for (let i = 0; i < options.length; i++) {
-        const txt = await pupp.getElementHtml(options[i]);
-        const val = await (await options[i].getProperty("value")).jsonValue();
-        const tm = moment(txt);
-        if (tm.isValid()) {
-            console.log(`txt=${txt} val=${tm.format('YYYY-MM-DD')}`);
-            if (!secondVal) secondVal = val;
-        }        
-        console.log(`at ${i} ${txt} ${val}`);        
-    }
-    await tranDropdown.select(secondVal);
-    await Promise.delay(1000);
-    */
-
+  
     const fileTypeDropdown = await waitAndFindOneCss('#select_filetype');
     await findDropdownAndSelect('#select_filetype', async (prms: ISelectPrms) => {
         const { txt, val, position, } = prms;
@@ -299,3 +283,4 @@ async function setDownloadPath(page: any, log: ILog) {
     //    };
     //});
 //}
+*/

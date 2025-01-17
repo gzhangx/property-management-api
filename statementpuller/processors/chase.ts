@@ -1,3 +1,4 @@
+/*
 import moment from 'moment';
 //const csvParse = require('csv-parse/sync');
 //const axios = require('axios');
@@ -186,21 +187,7 @@ export async function doJob(pupp: IPuppWrapper, opts: IPuppOpts): Promise<IGenDo
         } as IGenDownloadFileRet;
         for (let tdi = 0; tdi < tds.length; tdi++) {
             const td = tds[tdi];
-            /*
-            <td class="date BODY grouped-date" data-th="Date" tabindex="-1"> 0
-                <span class="column-info">Oct 5, 2022</span>
-            </td>
-            <td class="description has-expand BODY" data-th="Description" tabindex="-1">  
-                <span class="show-xs hide-sm BODY column-info">LOWES xxx </span> 
-                    <div class="small-seedetail-link">
-                        <span class="hide-xs show-sm BODY">LOWES*  </span>
-                    </div>
-                    <div class="transaction-detail-section"></div>
-            </td>
-            <td class="category BODY" data-th="Category">
-               <span class="BODY category-dropdown">
-               <div class="inline-content"><mds-link class="drop-link mds-link--bcb" id="categoryLink_202210051829042220928#20220928" text="Home" accessible-text=", opens menu" data-categoryid="HOME" end-icon="ico_chevron_down" data-transactionindex="40" data-transactionid="202210051829042220928#20220928" is-button="false" href="javascript:void(0)" underline="false" accessible-text-prefix="" tab-focusable="true" inverse="false" leading-pipe="false" trailing-pipe="false" inactive="false" truncation="none"></mds-link></div></span>     </td><td class="sm-aligned-right amount BODY" data-th="Amount" tabindex="-1">    <span class="column-info">$10.44</span>     </td> <td class="util aligned right print-hide BODY etd-xs-link" data-th="Action"> <mds-button class="etd-action-icon mds-button--bcb" icon-accessible-description="See details about this transaction" accessible-text="See details about this transaction" icon-position="icon_only" icon-type="ico_chevron_right" id="transactionDetailIcon-slideInActivity-40" variant="tertiary" width-type="content" small="false" inactive="false" tab-focusable="true" type="button" inverse="false"></mds-button></td>
-            */
+
             const clsName = await pupp.getAttribute(td, 'class');
             //class="drop-link mds-link--bcb" id="categoryLink_202210241741135220928#20220928"
             //text = "Food &amp; drink" accessible - text=", opens menu" data - categoryid="FOOD" end - icon="ico_chevron_down" data - transactionindex="1" data - transactionid="202210241741135220928#20220928" is - button="false" href = "javascript:void(0)" underline = "false" accessible - text - prefix="" tab - focusable="true" inverse = "false" leading - pipe="false" trailing
@@ -342,7 +329,7 @@ async function downloadFile(pupp: IPuppWrapper, opts: IPuppOpts, monthOffset = 0
     //    };
     //});
 //}
-
+*/
 
 /*
 
