@@ -71,13 +71,18 @@ export async function doGet(req: Request, res: Response) {
         const sheet = client.getSheetOps(id);
         let rsp = null;
         if (op === 'read') {
-            rsp = await sheet.read(range);
+            rsp = await sheet.readData(range); //changed from read
         } else if (op === 'append') {
-            rsp = await sheet.append(range, data); //`'Sheet1'!A1:B2`, [['data']]
+            let useRange = range;
+            if (range.indexOf('!') < 0) {
+                useRange = await sheet.getSheetRange(range, { col: data[0].length, row: data.length }, {row: 0, col: 0});
+            }
+            rsp = await sheet.append(useRange, data); //`'Sheet1'!A1:B2`, [['data']]
         } else if (op === 'batch') {
             rsp = await sheet.doBatchUpdate(data);
         } else if (op === 'update') {
-            rsp = await sheet.updateValues(range, data);
+            //rsp = await sheet.updateValues(range, data);
+            rsp = await sheet.autoUpdateValues(range, data);
         } else {
             res.send(400, { message: `Not supported operation ${op}` });
         }
