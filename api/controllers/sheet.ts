@@ -72,12 +72,8 @@ export async function doGet(req: Request, res: Response) {
         let rsp = null;
         if (op === 'read') {
             rsp = await sheet.readData(range); //changed from read
-        } else if (op === 'append') {
-            let useRange = range;
-            if (range.indexOf('!') < 0) {
-                useRange = await sheet.getSheetRange(range, { col: data[0].length, row: data.length }, {row: 0, col: 0});
-            }
-            rsp = await sheet.append(useRange, data); //`'Sheet1'!A1:B2`, [['data']]
+        } else if (op === 'append') {            
+            rsp = await sheet.append(range, data); //`'Sheet1'!A1:B2`, [['data']]
         } else if (op === 'batch') {
             rsp = await sheet.doBatchUpdate(data);
         } else if (op === 'update') {
