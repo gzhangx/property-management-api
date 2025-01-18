@@ -78,7 +78,11 @@ export async function doGet(req: Request, res: Response) {
             rsp = await sheet.doBatchUpdate(data);
         } else if (op === 'update') {
             //rsp = await sheet.updateValues(range, data);
-            rsp = await sheet.autoUpdateValues(range, data);
+            const row = req.params.row;
+            rsp = await sheet.autoUpdateValues(range, data, {
+                row,
+                col: 0,
+            });
         } else {
             res.send(400, { message: `Not supported operation ${op}` });
         }
