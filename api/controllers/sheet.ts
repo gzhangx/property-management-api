@@ -52,7 +52,10 @@ export async function doGet(req: Request, res: Response) {
     try {        
         const { op, id, range } = req.params;    
                 
-        const data = req.body;
+        const data: {
+            row: number;
+            values: string[][];
+        } = req.body;
                 
         const { client, message } = await getSheetClient(req, id);
         if (message) {
@@ -73,13 +76,14 @@ export async function doGet(req: Request, res: Response) {
         if (op === 'read') {
             rsp = await sheet.readData(range); //changed from read
         } else if (op === 'append') {            
-            rsp = await sheet.append(range, data); //`'Sheet1'!A1:B2`, [['data']]
+            rsp = await sheet.append(range, data.values); //`'Sheet1'!A1:B2`, [['data']]
         } else if (op === 'batch') {
             rsp = await sheet.doBatchUpdate(data);
         } else if (op === 'update') {
-            //rsp = await sheet.updateValues(range, data);
-            const row = req.params.row;
-            rsp = await sheet.autoUpdateValues(range, data, {
+            //rsp = await sheet.updateValues(range, data);            
+            const row = data.row;
+            const values = data.values;
+            rsp = await sheet.autoUpdateValues(range, values, {
                 row,
                 col: 0,
             });
