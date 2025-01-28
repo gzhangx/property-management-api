@@ -3,7 +3,7 @@ import moment from 'moment';
 export const maintenanceRecords:IDBModel = {
     fields:
         [
-            { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' }, isId: true, },
+            { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' } },
             { field: 'maintenanceID', desc: 'Id' , type: 'uuid', required: true, isId: true},
             { field: 'date', desc: 'date', type: 'date' },
             { field: 'month', desc: 'month', autoValueFunc: row => moment(row['date']).format('YYYY-MM') }, //dontShowOnEdit: true, 
