@@ -11,7 +11,7 @@ export const maintenanceRecords:IDBModel = {
             { field: 'amount', desc:'Amount', type: 'decimal', },
             { field: 'expenseCategoryId', desc: 'category', foreignKey: { table: 'expenseCategories', field: 'expenseCategoryID' }, required: true, },
             { field: 'hours', desc:'Hours', type: 'decimal' },
-            { field: 'workerID', desc: 'Worker Id', type: 'uuid', required: true, foreignKey: { table: 'workerInfo', field: 'workerID' } },
+            { field: 'workerID', desc: 'Worker Id', type: 'uuid', required: false, foreignKey: { table: 'workerInfo', field: 'workerID' } },
             { field: 'comment', desc: 'comment', size: 4096 },
         ],
     view: {
