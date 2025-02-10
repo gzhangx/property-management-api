@@ -272,7 +272,7 @@ export async function doGet(req: Request, res: Response) {
     
     return res.json(rspRes);
   } catch (err: any) {
-    console.log(err);
+    console.log('doGetError',err);
     res.send(500, {
       message: err.message,
       errors: err.errors
@@ -451,7 +451,7 @@ export async function createOrUpdate(req: Request, res: Response) {
     const rows = await createOrUpdateInternal(req.body, auth);    
     return res.json(rows);
   } catch (err:any) {
-    console.log(err);
+    console.log('createOrUpdateError',err);
     res.send(500, {
       message: err.message,
       errors: err.errors

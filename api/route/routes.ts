@@ -95,6 +95,10 @@ export const routes = {
         method: 'post',
         func: sheet.doGet,
     },
+    '/misc/sheet/deleteRow/:id/:sheetName/:row': {
+        method: 'post',
+        func: sheet.deleteRow,
+    },
 
     '/misc/sheet/saveSheetAuthData': {
         method: 'post',

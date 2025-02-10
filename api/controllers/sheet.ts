@@ -104,6 +104,49 @@ export async function doGet(req: Request, res: Response) {
     }
 }
 
+
+export async function deleteRow(req: Request, res: Response) {
+    try {
+        const { id, sheetName, row } = req.params;
+
+        const { client, message } = await getSheetClient(req, id);
+        if (message) {
+            return res.json({
+                message,
+                error: message,
+            });
+        }
+        if (!client) {
+            const message = `clinet  not found`;
+            console.log(message);
+            return res.send(500, {
+                message,
+            });
+        }
+        const sheet = client.getSheetOps(id);
+        if (!/\d+/.test(row)) {
+            throw new Error('Bad row not number ' + row);
+        }
+        const rowInt = parseInt(row);
+        if (isNaN(rowInt) || rowInt< 0) {
+            throw new Error('Bad row ' + row);
+        }
+        console.log(`deleting ${rowInt}/${rowInt + 1}`);
+        const rsp = await sheet.deleteRowOrCol(sheetName, 'ROWS', rowInt, rowInt + 1);
+
+        return res.json(rsp);
+    } catch (err: any) {
+        const rspErr = get(err, 'response.text') || get(err, 'response.data.error');
+        console.log('sheet.doGet error, params, rspErr, errors', req.params, rspErr, err.errors);
+        console.log('sheet.doGet error', cleanError(err));
+        res.send(422, {
+            id: req.params.id,
+            message: err.message,
+            errors: err.errors,
+            rspErr,
+        });
+    }
+}
 /////////////////////////
 ///
 /// post body has

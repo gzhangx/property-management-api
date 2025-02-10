@@ -19,7 +19,7 @@ function serverInit(server: restify.Server) {
   server.use(restify.plugins.queryParser());
   server.use(restify.plugins.bodyParser({requestBodyOnGet: true}));
   server.use(restify.plugins.authorizationParser());
-  server.use(restify.plugins.requestLogger());
+  //server.use(restify.plugins.requestLogger());
 
   route.route(server);
 }
