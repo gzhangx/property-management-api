@@ -1,9 +1,9 @@
-import { createConn} from './mysql';
+import { getSqlConn } from './bootSec';
 const {
     conn,
     doQuery,
     doQueryOneRow,
-} = createConn();
+} = getSqlConn();
 
 export async function findUser(qryPrms: {[key:string]:string}) {
     let query='';

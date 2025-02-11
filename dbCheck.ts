@@ -1,4 +1,4 @@
-import * as mysql from './api/lib/mysql';
+import * as sec from './api/lib/bootSec';
 
 //import * as modelsAll from './api/models/index';
 import mod, { IDBFieldDef }  from './api/models/index'
@@ -11,7 +11,7 @@ const IDENT_ID = 'auto_increment';
 const {
     conn,
     doQuery,
-} = mysql.createConn();
+} = sec.getSqlConn();
 
 const tables = Object.keys(mod);
 

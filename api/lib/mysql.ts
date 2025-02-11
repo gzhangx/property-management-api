@@ -1,15 +1,12 @@
 import * as  mysql from 'mysql';
 
-export function createConn(config?: mysql.PoolConfig) {
-    const conn = mysql.createPool(config || {
-        connectionLimit: 3,
-        //host: 'localhost',
-        //user: 'lluser',
-        host: process.env.DBHOST || 'localhost',
-        user: 'jjuser',
-        password: '12345',
+export function createConn(config: mysql.PoolConfig) {
+    const conn = mysql.createPool({
+        connectionLimit: 3,        
+        host: process.env.DBHOST || 'localhost',        
         database: "PM",
         charset: "utf8mb4_unicode_ci",
+        ...config,
     });
 
     function doQuery(sql: string, param:any[] = []): Promise<any[]> {
