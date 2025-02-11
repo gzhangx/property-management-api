@@ -15,11 +15,11 @@ export const leaseInfo: IDBModel = {
             { field: 'petDeposit', desc: 'Pet Deposit', type: 'decimal', def: 0 },
             { field: 'otherDeposit', desc: 'Other Deposit',  type: 'decimal', def: 0 },
             
-            { field: 'comment', desc: 'Comment' },
+            { field: 'comment', desc: 'Comment', size: 1024 },
 
             { field: 'reasonOfTermination', desc: 'Reason Of Termination' },
             { field: 'terminationDate', desc: 'Termination Date', type: 'date' },
-            { field: 'terminationComments', desc: 'Termination Comments' },
+            { field: 'terminationComments', desc: 'Termination Comments', size: 1024 },
             
             { field: 'tenant1', desc: 'Tenant ID', foreignKey: { table: 'tenantInfo', field: 'tenantID' } },
             { field: 'tenant2', desc: 'Tenant ID', foreignKey: { table: 'tenantInfo', field: 'tenantID' } },
