@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/JPLoyalter/loyalter-api#readme",
   "dependencies": {
+    "@azure/communication-email": "^1.0.0",
     "@gzhangx/googleapi": "^0.0.80",
     "bluebird": "^3.7.2",
     "cookie-session": "^2.0.0",
