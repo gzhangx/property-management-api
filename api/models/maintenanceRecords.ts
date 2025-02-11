@@ -9,7 +9,7 @@ export const maintenanceRecords:IDBModel = {
             { field: 'month', desc: 'month', autoValueFunc: row => moment(row['date']).format('YYYY-MM') }, //dontShowOnEdit: true, 
             { field: 'description', desc: 'description:', size: 4096},
             { field: 'amount', desc:'Amount', type: 'decimal', },
-            { field: 'expenseCategoryId', desc: 'category', foreignKey: { table: 'expenseCategories', field: 'expenseCategoryID' }, required: true, },
+            { field: 'expenseCategoryId', desc: 'category', required: true, },
             { field: 'hours', desc:'Hours', type: 'decimal' },
             { field: 'workerID', desc: 'Worker Id', type: 'uuid', required: false, foreignKey: { table: 'workerInfo', field: 'workerID' } },
             { field: 'comment', desc: 'comment', size: 4096 },
