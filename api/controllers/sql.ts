@@ -43,7 +43,8 @@ const goodOps = Object.freeze({
   '<=': true,
   '!=': true,
   '<>': true,
-  'in':true,
+  'in': true,
+  'isNULL': true,
 }) as { [key: string]: boolean; };
 
 const goodGroupOps = Object.freeze({
@@ -62,7 +63,7 @@ interface ISqlOrderDef {
 
 interface ISqlRequestWhereItem {
   field: string;
-  op: '>' | '>=' | '=' | '<' | '<=' | '!=' | '<>' | 'in';
+  op: '>' | '>=' | '=' | '<' | '<=' | '!=' | '<>' | 'in' | 'isNULL';
   val: string | number | (string|number)[];
 }
 
@@ -200,6 +201,8 @@ export async function doSqlGetInternal(auth: IUserAuth, sqlReq: ISqlRequest) {
               acc.whr.push(`${w.field} in(?)`);
               acc.prms.push(w.val);
             }
+          } else if (w.op === 'isNULL') { 
+            acc.whr.push(`${w.field} is null`)
           } else {
             acc.whr.push(`${w.field} ${w.op} ?`);
             if (!Array.isArray(w.val)) {
