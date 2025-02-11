@@ -7,11 +7,11 @@ module.exports={
             { field: 'amount', desc: 'Amount', type: 'decimal' },
             { field: 'title', desc: 'Desc' },
         ],
-        view:{
-            name:'view_Statement',
-            fields:[
-                { name: 'firstName', field: 'firstName', desc: 'Worker Firstname', table: 'workerInfo' },
-                { name: 'lastName', field: 'lastName', desc: 'Worker Lastname', table: 'workerInfo' },
-            ],  
-        }
+        //view:{
+        //    name:'view_Statement',
+        //    fields:[
+        //        { name: 'firstName', field: 'firstName', desc: 'Worker Firstname', table: 'workerInfo' },
+        //        { name: 'lastName', field: 'lastName', desc: 'Worker Lastname', table: 'workerInfo' },
+        //    ],  
+        //}
 };

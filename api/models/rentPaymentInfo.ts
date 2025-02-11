@@ -19,10 +19,10 @@ export const rentPaymentInfo: IDBModel = {
         view:{
             name: 'view_rentPaymentInfo',
             fields:[
-                { name: 'address', field: 'address', desc: 'House', table: 'houseInfo' },
-                { name: 'addressId', field: 'houseID', desc: 'HouseID', table: 'houseInfo' },
-                { field: 'source', desc: 'Source', table: 'ip' },
+                //{ name: 'address', field: 'address', desc: 'House', table: 'houseInfo' },
+                //{ name: 'addressId', field: 'houseID', desc: 'HouseID', table: 'houseInfo' },
+                //{ field: 'source', desc: 'Source', table: 'ip' },
             ], 
-            extraViewJoins: ' left join importPayments ip  on ip.paymentID  = rentPaymentInfo.paymentID',
+            //extraViewJoins: ' left join importPayments ip  on ip.paymentID  = rentPaymentInfo.paymentID',
         }
 };
