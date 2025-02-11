@@ -13,6 +13,7 @@ export const rentPaymentInfo: IDBModel = {
             { field: 'paymentTypeName', desc: 'PaymentType'},
             //{ field: 'leaseID', desc: 'Lease ID', foreignKey: {table: 'leaseInfo', field:'leaseID'}},
             { field: 'houseID', desc: 'House', foreignKey: { table: 'houseInfo', field: 'houseID' } },            
+            { field: 'leaseID', desc: 'Lease', foreignKey: { table: 'leaseInfo', field: 'leaseID' } },            
             { field: 'paymentProcessor', desc: 'Processor', },
         ],
         view:{
