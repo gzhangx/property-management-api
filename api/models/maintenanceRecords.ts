@@ -5,7 +5,7 @@ export const maintenanceRecords:IDBModel = {
         [
             { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' } },
             { field: 'maintenanceID', desc: 'Id' , type: 'uuid', required: true, isId: true},
-            { field: 'date', desc: 'date', type: 'date' },
+            { field: 'date', desc: 'datetime', type: 'datetime' },
             { field: 'month', desc: 'month', autoYYYYMMFromDateField: 'date', }, //dontShowOnEdit: true,  //autoValueFunc: row => moment(row['date']).format('YYYY-MM')
             { field: 'description', desc: 'description:', size: 4096},
             { field: 'amount', desc:'Amount', type: 'decimal', },
