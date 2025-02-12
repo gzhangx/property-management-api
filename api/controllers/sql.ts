@@ -254,7 +254,7 @@ export async function doSqlGetInternal(auth: IUserAuth, sqlReq: ISqlRequest) {
 
   
   fixRowTime(rows, model.fields);
-  
+
   return ({
     offset,
     rowCount,
@@ -270,10 +270,18 @@ function fixRowTime(rows: any, defs: models.IDBFieldDef[]) {
     for (const df of dateFields) {
       const rv = row[df.field];
       if (rv && rv instanceof Date) {
-        row[df.field] = rv.toISOString();
+        //only way to return utc date stored in mysql
+        row[df.field] = toYYYYMMDDHHmmss(rv);
       }
     }
   }
+}
+
+function pad2(n: number) {
+  return n.toString().padStart(2, '0');
+}
+function toYYYYMMDDHHmmss(date: Date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
 }
 
 export async function doGet(req: Request, res: Response) {
