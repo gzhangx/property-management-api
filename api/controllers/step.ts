@@ -24,7 +24,8 @@ export async function login(req: Request, res:Response) : Promise<void> {
         const id = user.userID;
         if (users[0].password === password) {            
             const token = createUserToken({
-                userID: id,            
+                userID: id,
+                timezone: user.timezone || -5,
             });
             return res.send({
                 id: id,

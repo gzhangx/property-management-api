@@ -297,10 +297,7 @@ const vmap = (v: any, formatter?: (f: any) => string): string | number => {
 
 const vmap2 = (v: (models.PossibleDbTypes|undefined), f: models.IDBFieldDef) => {
   if (v === null || v === 0) return v;
-  if (v === undefined) v = '';
-  if (v === '') {
-    if (f.type === 'decimal') return null;
-  }
+  if (v === undefined) v = null;  
   return v;
 }
 
@@ -343,7 +340,10 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
 
   let idVal:any = '' as models.PossibleDbTypes;
   let sqlArgs = [] as models.PossibleDbTypes[];
-    
+  
+  function getAutoYYMM(f: models.IDBFieldDef) {
+    return moment.utc(fields[f.autoYYYYMMFromDateField!]).add(auth.timezone, 'h').format('YYYY-MM');
+  }
   if (doCreate) {
 
     sqlStr = `insert into ${table} (${model.fields.filter(f => !f.ident).map(f => f.field).join(',')},created,modified)
@@ -361,15 +361,16 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
       //  sqlArgs.push(auth.code);
       //  return '?';
       //}
-      if (f.autoValueFunc) {
-        sqlArgs.push(f.autoValueFunc(fields, f, val))
+      if (f.autoYYYYMMFromDateField) {           
+        sqlArgs.push(getAutoYYMM(f))        
       }
       else {
-        let formatter = ((x: models.PossibleDbTypes) => x);
-        if (f.type === 'datetime' || f.type === 'date') {
-          formatter = dateStrFormatter;
-        }
-        sqlArgs.push(formatter(vmap2(val, f)));
+        //let formatter = ((x: models.PossibleDbTypes) => x);
+        //if (f.type === 'datetime' || f.type === 'date') {
+        //  formatter = dateStrFormatter;
+        //}
+        //sqlArgs.push(formatter(vmap2(val, f)));
+        sqlArgs.push((vmap2(val, f)));
       }
       return '?';
       //return vmap(val);
@@ -388,19 +389,14 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
         acc.idFields.push({ name: mf.field, value: v });
       } else if (!isOwnerSecurityField(mf)){
         {
-          const v = fields[mf.field];
-          if (v !== undefined) {
-            let formatter =  vmap2;
-            if (mf.type === 'datetime') {
-              formatter = dateStrFormatter as any;
-            }
-            if (mf.autoValueFunc) {
-              const fv = mf.autoValueFunc(fields, mf, v as string); //just fake it;
-              formatter = () => fv;
+          let v = fields[mf.field];
+          if (v !== undefined) {            
+            if (mf.autoYYYYMMFromDateField) {
+              v = getAutoYYMM(mf);
             }
             acc.values.push({
               name: mf.field,
-              value: formatter(v, mf),
+              value: vmap2(v, mf),
             })
           }
         }

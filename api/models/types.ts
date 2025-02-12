@@ -1,5 +1,6 @@
 export interface IUserAuth {
-    userID: string;    
+    userID: string;
+    timezone: number;
 }
 
 export type ModelTableNames = 'userInfo' | 'houseInfo' | 'tenantInfo' | 'workerInfo' | 'workerComp' | 'maintenanceRecords' | 'googleApiCreds' | 'rentPaymentInfo' | 'leaseInfo' | 'expenseCategories';
@@ -18,7 +19,8 @@ export interface IDBFieldDef {
     ident?: boolean;    
     //isOwnerSecurityParentField?: boolean;
     //key?: 'UNI' | 'PRI' | null;
-    autoValueFunc?: (row: { [key: string]: (string | number) }, field: IDBFieldDef, val: PossibleDbTypes) => (string);
+    //autoValueFunc?: (row: { [key: string]: (string | number) }, field: IDBFieldDef, val: PossibleDbTypes) => (string);
+    autoYYYYMMFromDateField?: string;
     foreignKey?: {
         table: ModelTableNames;
         field: string;

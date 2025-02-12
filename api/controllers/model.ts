@@ -12,8 +12,8 @@ async function getModel(req:Request, res:Response) {
       
     };
     resm.fields = resm.fields.map(f => {
-      if (f.autoValueFunc)
-        return null;
+      //if (f.autoValueFunc)
+      //  return null;
       (f as any).userSecurityField = isOwnerSecurityField(f);
       return f;
     }).filter(f => f) as IDBFieldDef[];
