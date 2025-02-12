@@ -252,12 +252,28 @@ export async function doSqlGetInternal(auth: IUserAuth, sqlReq: ISqlRequest) {
   const countRes = await db.doQueryOneRow(`select count(1) cnt ${fromAndWhere}  ${groupByStr}`, wherePrm);
   const rows = await db.doQuery(sqlStr, wherePrm);
 
+  
+  fixRowTime(rows, model.fields);
+  
   return ({
     offset,
     rowCount,
     total: get(countRes, 'cnt'),
     rows,
   });
+}
+
+function fixRowTime(rows: any, defs: models.IDBFieldDef[]) {
+  const dateFields = defs.filter(f => f.type === 'date' || f.type === 'datetime');
+  
+  for (const row of rows) {
+    for (const df of dateFields) {
+      const rv = row[df.field];
+      if (rv && rv instanceof Date) {
+        row[df.field] = rv.toISOString();
+      }
+    }
+  }
 }
 
 export async function doGet(req: Request, res: Response) {
