@@ -9,9 +9,10 @@ interface ILoginParms {
 
 interface IuserInfo {
     userID: string;
-    userName: string;    
+    username: string;    
     password: string;
-
+    Name: string; //not used
+    timezone: number;
 }
 
 
@@ -29,6 +30,8 @@ export async function login(req: Request, res:Response) : Promise<void> {
                 id: id,
                 exp: 1,
                 token,
+                name: user.Name,
+                timezone: user.timezone,
             });
         }
         return res.send({ error: 'bad password' });
