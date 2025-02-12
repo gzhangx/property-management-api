@@ -10,7 +10,7 @@ export interface IDBFieldDef {
     field: string; //actual field
     name?: string; //name
     desc: string;
-    type?: '' | undefined | 'int' | 'string' | 'date' | 'datetime'| 'decimal' | 'uuid';
+    type?: '' | undefined | 'int' | 'string' | 'date' | 'datetime'| 'decimal' | 'uuid' | 'text';
     size?: string | number;
     required?: boolean;
     isId?: boolean;

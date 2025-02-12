@@ -30,6 +30,7 @@ function getTypeFromDef(f: IDBFieldDef) {
     if (f.type === 'date') return 'date';
     if (f.type === 'datetime') return 'datetime';
     if (f.type === 'decimal') return 'DECIMAL(12,2)';
+    if (f.type === 'text') return 'text';
     if (f.size) return `varchar(${f.size})`;
     return 'varchar(100)';
 }
