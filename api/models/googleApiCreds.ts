@@ -6,6 +6,7 @@ export const googleApiCreds = {
             { field: 'private_key', desc: 'Key',  size: 4096},
             { field: 'client_email', desc: 'Client Email', },
             { field: 'googleSheetId', desc: 'Sheet Id', },
+            { field: 'otherUserConfig', desc:'otherUserconfigJson', type:'text'},
             { field: 'userID', desc: 'Owner ID', isId: true, required: true, isOwnerSecurityField: true, foreignKey: { table: 'userInfo', field: 'userID' } },
         ],    
 } as IDBModel;
