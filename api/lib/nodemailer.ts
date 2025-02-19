@@ -8,7 +8,7 @@ export type IMailOptions = {
     from?: string;
     to: string | string[];
     subject: string;
-    text: string;
+    text?: string;
     html?: string;
 };
 
