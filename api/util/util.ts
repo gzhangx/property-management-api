@@ -15,3 +15,6 @@ export function getUser(req: any) {
 export const formatterYYYYMMDD=(str:string) => `STR_TO_DATE('${str}','%Y-%m-%d')`;
 
 export const extensionFields = Object.freeze([{ field: 'created' }, { field: 'modified' }]) as IDBFieldDef[];
+
+
+export const NOT_AUTHORIZED_MESSAGE = 'not authorized';

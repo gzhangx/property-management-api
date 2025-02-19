@@ -3,7 +3,7 @@ import * as db from '../lib/db';
 import * as  models from '../models/index';
 import { keyBy, get } from 'lodash';
 import * as uuid from 'uuid';
-import { extensionFields } from '../util/util';
+import { extensionFields, NOT_AUTHORIZED_MESSAGE } from '../util/util';
 import moment from 'moment';
 import {getUserAuth } from '../util/pauth'
 
@@ -287,7 +287,7 @@ function toYYYYMMDDHHmmss(date: Date) {
 export async function doGet(req: Request, res: Response) {
   const auth = getUserAuth(req);
   if (!auth) {
-    const message = 'not authorized';
+    const message = NOT_AUTHORIZED_MESSAGE;
     return res.json({
       message,
       error: message,
@@ -465,7 +465,7 @@ export async function createOrUpdate(req: Request, res: Response) {
   try {
     const auth = getUserAuth(req);
     if (!auth) {
-      const message = 'not authorized';
+      const message = NOT_AUTHORIZED_MESSAGE;
       return res.json({
         message,
         error: message,
@@ -487,7 +487,7 @@ export async function del(req: Request, res: Response) {
   try {
     const auth = getUserAuth(req);
     if (!auth) {
-      const message = 'not authorized';
+      const message = NOT_AUTHORIZED_MESSAGE;
       return res.json({
         message,
         error: message,
