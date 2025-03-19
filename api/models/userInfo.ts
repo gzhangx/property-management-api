@@ -6,6 +6,7 @@ export const userInfo: IDBModel =  {
             { field: 'username', desc: 'username' },
             { field: 'password', desc: 'Password' },
             { field: 'Name', desc: 'Name' },
-            { field: 'timezone', desc: 'Timezone', type: 'int'}
+            //export type TimeZoneType = 'America/New_York' | 'America/Chicago' | 'America/Denver' | 'America/Los_Angeles' | 'America/Phoenix' | 'America/Anchorage' | 'Pacific/Honolulu';
+            { field: 'timezone', desc: 'Timezone', type: 'string'}  
         ]
 };
