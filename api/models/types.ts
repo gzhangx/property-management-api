@@ -25,6 +25,7 @@ export interface IDBFieldDef {
         table: ModelTableNames;
         field: string;
     };
+    allowBadForeignKey?: boolean;
 }
 
 export interface IDBViewFieldDef extends IDBFieldDef {
