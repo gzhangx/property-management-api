@@ -324,7 +324,7 @@ const vmap2 = (v: (models.PossibleDbTypes|undefined), f: models.IDBFieldDef) => 
   if (v === null || v === 0) return v;
   if (v === undefined) v = null;  
   if (f.type === 'datetime' || f.type === 'date') {
-    return `CAST('${v}' as DateTime)`;
+    return moment.utc(v).toDate();
   }
   return v;
 }
