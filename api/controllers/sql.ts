@@ -5,6 +5,7 @@ import { keyBy, get } from 'lodash';
 import * as uuid from 'uuid';
 import { extensionFields, NOT_AUTHORIZED_MESSAGE } from '../util/util';
 import moment from 'moment';
+import momentTimezone from 'moment-timezone';
 import {getUserAuth } from '../util/pauth'
 
 import { IUserAuth, ModelTableNames } from '../models/types';
@@ -322,6 +323,9 @@ const vmap = (v: any, formatter?: (f: any) => string): string | number => {
 const vmap2 = (v: (models.PossibleDbTypes|undefined), f: models.IDBFieldDef) => {
   if (v === null || v === 0) return v;
   if (v === undefined) v = null;  
+  if (f.type === 'datetime' || f.type === 'date') {
+    return `CAST('${v}' as DateTime)`;
+  }
   return v;
 }
 
@@ -366,7 +370,7 @@ export async function createOrUpdateInternal(body: ICreateUpdateParms, auth: IUs
   let sqlArgs = [] as models.PossibleDbTypes[];
   
   function getAutoYYMM(f: models.IDBFieldDef) {
-    return moment.utc(fields[f.autoYYYYMMFromDateField!]).add(auth.timezone, 'h').format('YYYY-MM');
+    return momentTimezone.tz(moment.utc(fields[f.autoYYYYMMFromDateField!]), auth.timezone).format('YYYY-MM');
   }
   if (doCreate) {
 

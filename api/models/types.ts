@@ -1,6 +1,7 @@
+export type TimeZoneType = 'America/New_York' | 'America/Chicago' | 'America/Denver' | 'America/Los_Angeles' | 'America/Phoenix' | 'America/Anchorage' | 'Pacific/Honolulu';
 export interface IUserAuth {
     userID: string;
-    timezone: number;
+    timezone: TimeZoneType;
 }
 
 export type ModelTableNames = 'userInfo' | 'houseInfo' | 'tenantInfo' | 'workerInfo' | 'workerComp' | 'maintenanceRecords' | 'googleApiCreds' | 'rentPaymentInfo' | 'leaseInfo' | 'expenseCategories' | 'userOptions';
