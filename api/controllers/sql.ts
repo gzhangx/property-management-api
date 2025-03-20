@@ -322,10 +322,7 @@ const vmap = (v: any, formatter?: (f: any) => string): string | number => {
 
 const vmap2 = (v: (models.PossibleDbTypes|undefined), f: models.IDBFieldDef) => {
   if (v === null || v === 0) return v;
-  if (v === undefined) v = null;  
-  if (f.type === 'datetime' || f.type === 'date') {
-    return moment.utc(v).toDate();
-  }
+  if (v === undefined) v = null;    
   return v;
 }
 
