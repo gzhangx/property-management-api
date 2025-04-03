@@ -5,7 +5,7 @@ export const leaseInfo: IDBModel = {
         [
             { field: 'userID', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, isId: true, },
             { field: 'leaseID', desc: 'Id', type: 'uuid', required: true, isId: true },
-            { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID' } },
+            { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID', resolvedToField: 'addressObj' } },
             { field: 'startDate', desc: 'Start Date', type: 'date' },            
             { field: 'endDate', desc: 'End Date', type: 'date' },
             { field: 'monthlyRent', desc: 'Monthly Rent', required: true, type: 'decimal', },            

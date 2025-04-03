@@ -25,6 +25,8 @@ export interface IDBFieldDef {
     foreignKey?: {
         table: ModelTableNames;
         field: string;
+        //the following is ui only
+        resolvedToField?: string; //for foreign key fields, the field name to which this foreign object is resolved to on the current object (i.e. rentPaymentInfo will have a field addressObj which is the houseInfo object)
     };
     allowBadForeignKey?: boolean;
 }
