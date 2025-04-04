@@ -8,7 +8,8 @@ export const houseInfo = {
             { field: 'city', desc: 'City', },
             { field: 'state', desc: 'State',  },
             { field: 'zip', desc: 'Zip', },
-            { field: 'ownerName', desc: 'Owner Name', },            
+            { field: 'ownerName', desc: 'Owner Name', },
+            {field: 'disabled', desc:'manually set to Y to prevent from showing', size:1}
         ],
     view:{
         name:'view_house',
