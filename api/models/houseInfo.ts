@@ -9,7 +9,8 @@ export const houseInfo = {
             { field: 'state', desc: 'State',  },
             { field: 'zip', desc: 'Zip', },
             { field: 'ownerName', desc: 'Owner Name', },
-            {field: 'disabled', desc:'manually set to Y to prevent from showing', size:1}
+            { field: 'disabled', desc: 'manually set to Y to prevent from showing', size: 1 },
+            { field: 'cost', desc: 'Cost for IRS tax calculation',  type: 'decimal', def: 0},
         ],
     view:{
         name:'view_house',
