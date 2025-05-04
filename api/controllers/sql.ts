@@ -46,6 +46,7 @@ const goodOps = Object.freeze({
   '<>': true,
   'in': true,
   'isNULL': true,
+  'like': true,
 }) as { [key: string]: boolean; };
 
 const goodGroupOps = Object.freeze({
