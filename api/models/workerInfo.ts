@@ -19,6 +19,6 @@ export const workerInfo: IDBModel = {
             { field: 'zellerId', desc: 'ZellerId', },
             { field: 'venmoId', desc: 'Venmo Id', },
             { field: 'paypalId', desc: 'Paypal Id', },
-            { field: 'comments', desc: 'Comments', },
+            { field: 'comment', desc: 'Comments', },
         ]
 };
