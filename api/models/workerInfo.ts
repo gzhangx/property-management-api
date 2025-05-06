@@ -12,6 +12,13 @@ export const workerInfo: IDBModel = {
             { field: 'state', desc: 'State' },
             { field: 'zip', desc: 'Zip' },
             { field: 'email',desc: 'Email',},
-            { field: 'phone',desc: 'Phone',},
+            { field: 'phone', desc: 'Phone', },
+            
+            { field: 'contactPerson', desc: 'Contact Person', },
+            { field: 'website', desc: 'Website', },
+            { field: 'zellerId', desc: 'ZellerId', },
+            { field: 'venmoId', desc: 'Venmo Id', },
+            { field: 'paypalId', desc: 'Paypal Id', },
+            { field: 'comments', desc: 'Comments', },
         ]
 };
