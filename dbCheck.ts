@@ -68,8 +68,13 @@ export async function check() {
         } catch (exc: any) {
             console.log(`error query table ${tabName}, creating`)
             console.log( exc.message );
+            let primaryKey = '';
+            const pks = curMod.fields.filter(f=>f.isId).map(f=>f.field);
+            if (pks.length > 0) {
+                primaryKey = ` primary key ${pks.join(',')}`
+            }
             const createSql=`create table ${tabName} (${curMod.fields.map( f => {
-                return `${f.field} ${typeToType(f)} ${pkStr(f)}`
+                return `${f.field} ${typeToType(f)}`
             } ).join( ',' )})`;
             console.log( createSql );
             await doQuery( createSql );
