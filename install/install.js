@@ -19,7 +19,8 @@ conn.on('ready', async function() {
         });
     }));
 
-    let res = await exec('cd property-management-api;cp /home/pi/creds/pienv.txt install;git pull;npm install;npm run build;sudo systemctl restart propertyManagement.service;');
+    const npm = 'npm';
+    let res = await exec(`export PATH=$PATH:/home/pi/.nvm/versions/node/v19.9.0/:/home/pi/.nvm/versions/node/v19.9.0/bin;cd property-management-api;cp /home/pi/creds/pienv.txt install;git pull;${npm} install;${npm} run build;sudo systemctl restart propertyManagement.service;`);
     console.log(res);
     conn.end();
 
