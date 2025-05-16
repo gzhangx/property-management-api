@@ -8,6 +8,7 @@ export const leaseInfo: IDBModel = {
             { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID', resolvedToField: 'addressObj' } },
             { field: 'startDate', desc: 'Start Date', type: 'date' },            
             { field: 'endDate', desc: 'End Date', type: 'date' },
+            { field: 'rentDueDay', desc: 'Month of day rent is due', type: 'int' },
             { field: 'monthlyRent', desc: 'Monthly Rent', required: true, type: 'decimal', },            
 
 
