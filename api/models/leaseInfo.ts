@@ -11,6 +11,8 @@ export const leaseInfo: IDBModel = {
             { field: 'rentDueDay', desc: 'Month of day rent is due', type: 'int' },
             { field: 'monthlyRent', desc: 'Monthly Rent', required: true, type: 'decimal', },            
 
+            { field: 'firstMonthProratedRent', desc: 'Prorated Rent', required: false, type: 'decimal', },
+
 
             { field: 'deposit', desc: 'Deposit', type: 'decimal' },
             { field: 'petDeposit', desc: 'Pet Deposit', type: 'decimal', def: 0 },
