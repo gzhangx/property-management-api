@@ -1,5 +1,6 @@
 import { IDBModel } from './types';
-const paymentType: IDBModel = {
+export const paymentType: IDBModel = {
+    name: 'paymentType',
     fields:
         [            
             { field: 'paymentTypeName', desc: 'date', isId: true, },

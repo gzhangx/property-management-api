@@ -1,7 +1,8 @@
 import { IDBModel } from './types';
 import { formatterYYYYMMDD } from '../util/util';
 /// internal table
-export const workerRelatedPayments: IDBModel ={
+export const workerRelatedPayments: IDBModel = {
+    name: 'workerRelatedPayments',
     fields:
         [
             {field: 'paymentID', desc: 'Id', type: 'uuid', required: true, isId: true, foreignKey: {table: 'rentPaymentInfo', field: 'paymentID'}},

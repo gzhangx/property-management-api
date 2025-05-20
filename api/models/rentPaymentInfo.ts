@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { IDBModel } from './types';
 export const rentPaymentInfo: IDBModel = {
+    name: 'rentPaymentInfo',
     fields:
         [            
             { field: 'paymentID', desc: 'Id', type: 'uuid', required: true, unique: true, isId: true },

@@ -1,5 +1,6 @@
 import { IDBModel } from './types';
-export const userInfo: IDBModel =  {
+export const userInfo: IDBModel = {
+    name: 'userInfo',
     fields:
         [            
             { field: 'userID', desc: 'Email', isId: true, },

@@ -1,6 +1,7 @@
 
 import { IDBModel } from './types';
 export const importLog: IDBModel = {
+    name: 'importLog',
     fields:
         [
             { field: 'userID', type: 'uuid', desc: 'User ID', required: true, foreignKey: { table: 'userInfo', field: 'userID' }, isId: true, },

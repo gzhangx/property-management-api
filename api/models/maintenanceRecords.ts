@@ -1,6 +1,7 @@
 import { IDBModel } from './types';
 import moment from 'moment';
-export const maintenanceRecords:IDBModel = {
+export const maintenanceRecords: IDBModel = {
+    name: 'maintenanceRecords',
     fields:
         [
             { field: 'houseID', desc: 'House ID', foreignKey: { table: 'houseInfo', field: 'houseID', resolvedToField: 'addressObj' } },

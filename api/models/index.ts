@@ -14,7 +14,7 @@ function createFieldMap(model: IDBModel) {
     }
   }
 
-  
+/*  
 export const data = files.reduce((acc, fname) => {
   const modName = fname.split('.')[0];
   const model = require(`./${modName}`) as IDBModel;
@@ -35,3 +35,52 @@ export const data = files.reduce((acc, fname) => {
 //module.exports = data;
 
 export default data;
+*/
+
+import { expenseCategories } from './expenseCategories';
+import { googleApiCreds } from './googleApiCreds';
+import { houseInfo } from './houseInfo';
+import { leaseInfo } from './leaseInfo';
+import { leaseTenantInfo } from './leaseTenantInfo';
+import { maintenanceRecords } from './maintenanceRecords';
+import { ownerInfo } from './ownerInfo';
+import { paymentType } from './paymentType';
+import { rentPaymentInfo } from './rentPaymentInfo';
+import { tenantInfo } from './tenantInfo';
+import { userInfo } from './userInfo';
+import { userOptions } from './userOptions';
+import { workerComp } from './workerComp';
+import { workerInfo } from './workerInfo';
+//import { workerRelatedPayments } from './workerRelatedPayments';
+
+const allModels: IDBModel[] = [
+  expenseCategories,
+  googleApiCreds,
+  houseInfo,
+  leaseInfo,
+  leaseTenantInfo,
+  maintenanceRecords,
+  ownerInfo,
+  paymentType,
+  rentPaymentInfo,
+  tenantInfo,
+  userInfo,
+  userOptions,
+  workerComp,
+  workerInfo,
+];
+
+export const data = allModels.reduce((acc, model) => {  
+  if (!model.fields) {
+    const modelNames = Object.keys(model);
+    modelNames.forEach(name => {
+      const act = (model as any)[name] as IDBModel;
+      createFieldMap(act);
+      acc[name] = act;
+    })
+  } else {
+    createFieldMap(model);
+    acc[model.name] = model;
+  }
+  return acc;
+}, {} as { [key: string]: IDBModel });

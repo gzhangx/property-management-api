@@ -1,5 +1,6 @@
 import { IDBModel } from './types';
-export const leaseTenantInfo:IDBModel = {
+export const leaseTenantInfo: IDBModel = {
+    name: 'leaseTenantInfo',
     fields:
         [
             { field: 'userID', type: 'uuid', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, isId: true, },

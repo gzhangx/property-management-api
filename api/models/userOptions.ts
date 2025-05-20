@@ -1,5 +1,6 @@
 import { IDBModel } from './types';
 export const userOptions = {
+    name: 'userOptions',
     fields:
         [
             { field: 'id', desc: 'Key Id', required: true, isId: true},

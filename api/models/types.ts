@@ -37,6 +37,7 @@ export interface IDBViewFieldDef extends IDBFieldDef {
 }
 
 export interface IDBModel {
+    name: string;
     fields: IDBFieldDef[];
     fieldMap?: {
         [key: string]: IDBFieldDef;
@@ -45,5 +46,6 @@ export interface IDBModel {
         name: string;
         fields: IDBViewFieldDef[];
         extraViewJoins?: string;
+        content?: string; //not sure what is this now
     }
 }

@@ -1,5 +1,6 @@
 import { IDBModel } from './types';
 export const ownerInfo: IDBModel = {
+    name: 'ownerInfo',
     fields:
         [
             { field: 'userID', desc: 'Owner', foreignKey: { table: 'userInfo', field: 'userID' }, required: true, },
