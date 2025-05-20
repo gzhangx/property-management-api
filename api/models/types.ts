@@ -4,7 +4,8 @@ export interface IUserAuth {
     timezone: TimeZoneType;
 }
 
-export type ModelTableNames = 'userInfo' | 'houseInfo' | 'tenantInfo' | 'workerInfo' | 'workerComp' | 'maintenanceRecords' | 'googleApiCreds' | 'rentPaymentInfo' | 'leaseInfo' | 'expenseCategories' | 'userOptions';
+export type ModelTableNames = 'userInfo' | 'houseInfo' | 'tenantInfo' | 'workerInfo' | 'workerComp' | 'maintenanceRecords' | 'googleApiCreds' | 'rentPaymentInfo' | 'leaseInfo' | 'expenseCategories' | 'userOptions'
+    | 'paymentType';
 
 export type PossibleDbTypes = (string | number | null | Date);
 export interface IDBFieldDef {

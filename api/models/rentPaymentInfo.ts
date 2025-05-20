@@ -10,7 +10,7 @@ export const rentPaymentInfo: IDBModel = {
             { field: 'paidBy', desc: 'Paid By', },
             { field: 'notes', desc: 'Notes', size: 1024}, //alter table rentPaymentInfo modify column notes varchar(1024);
             { field: 'month', desc: 'Month', autoYYYYMMFromDateField:'receivedDate' }, //autoValueFunc: row => moment(row['date']).format('YYYY-MM')
-            { field: 'paymentTypeName', desc: 'PaymentType'},
+            { field: 'paymentTypeName', desc: 'PaymentType', foreignKey: { table: 'paymentType', field: 'paymentTypeName' } },
             //{ field: 'leaseID', desc: 'Lease ID', foreignKey: {table: 'leaseInfo', field:'leaseID'}},
             { field: 'houseID', desc: 'House', foreignKey: { table: 'houseInfo', field: 'houseID', resolvedToField: 'addressObj' } },            
             { field: 'leaseID', desc: 'Lease', foreignKey: { table: 'leaseInfo', field: 'leaseID' } },            
