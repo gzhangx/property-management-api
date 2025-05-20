@@ -1,7 +1,7 @@
 import * as sec from './api/lib/bootSec';
 
 //import * as modelsAll from './api/models/index';
-import mod, { IDBFieldDef }  from './api/models/index'
+import { data, IDBFieldDef }  from './api/models/index'
 //const mod = modelsAll.data;
 import { extensionFields } from './api/util/util';
 
@@ -13,6 +13,7 @@ const {
     doQuery,
 } = sec.getSqlConn();
 
+const mod = data;
 const tables = Object.keys(mod);
 
 function throwErr(message: string) {
