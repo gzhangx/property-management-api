@@ -8,7 +8,7 @@ export async function sendEmail(req: Request, res: Response) {
     if (!req.body) {
         return res.send({ err: "no body" });
     }
-    const { subject, to, html } = req.body;
+    const { subject, to, html, cc } = req.body;
     if (!subject || !html) {
         return res.send({ err: "no subject or text" });
     }
@@ -46,7 +46,8 @@ export async function sendEmail(req: Request, res: Response) {
     //from '"GGBot" <gzhangx@gmail.com>',
     return email.sendGmail(
         smtpOpts, {
-        to,
+            to,
+            cc: cc,
         subject,
         html,
     }).then(inf => {

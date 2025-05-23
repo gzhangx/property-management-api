@@ -1,5 +1,6 @@
 'use strict';
 import * as  nodemailer from 'nodemailer';
+import Mail from 'nodemailer/lib/mailer';
 //import * as fs from 'fs';
 //import SMTPPool from 'nodemailer/lib/smtp-pool';
 //import SMTPConnection from 'nodemailer/lib/smtp-connection';
@@ -7,6 +8,7 @@ import * as  nodemailer from 'nodemailer';
 export type IMailOptions = {
     from?: string;
     to: string | string[];
+    cc: string;
     subject: string;
     text?: string;
     html?: string;
@@ -28,10 +30,11 @@ export async function sendGmail(smtp: ISmtpConfig, mailOptions: IMailOptions) {
             pass: smtp.pass,
         },
     });
-    const message = {
+    const message: Mail.Options = {
         from: smtp.user,
         // Comma separated list of recipients        
         to: mailOptions.to,
+        cc: mailOptions.cc,
         subject: mailOptions.subject,
         text: mailOptions.text,
         html: mailOptions.html,
