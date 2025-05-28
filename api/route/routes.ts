@@ -8,6 +8,7 @@ import * as statement from '../controllers/statements';
 import * as sheet from '../controllers/sheet';
 
 import * as steps from '../controllers/step';
+import * as browserControl from '../controllers/browserControl';
 //import * as googleApi from '../controllers/google.ts.old';
 
 export const routes = {
@@ -104,7 +105,12 @@ export const routes = {
         method: 'post',
         func: sheet.saveSheetAuthData,
     },
+    '/misc/browser/startBrowserControl': {
+        method: 'get',
+        func: browserControl.startBrowserControl,
+    },
     '/auth/login': {
+        auth: false,
         method: 'post',
         func: steps.login,
     },

@@ -4,7 +4,8 @@ import consts from './consts';
 //const restify = require('restify');
 import * as restify from 'restify'
 import { routes } from './routes';
-import { initAuth } from '../util/pauth'
+import { getUserAuth, initAuth } from '../util/pauth'
+import { NOT_AUTHORIZED_MESSAGE } from '../util/util';
 
 function addCORS(req: restify.Request, res: restify.Response) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -34,6 +35,15 @@ module.exports = {
             addCORS(req, res);
             const controller = routes[`${req.url?.substring(consts.apiRoot.length)}`]; //${consts.apiRoot}
             if (controller && controller.auth !== false) {
+                const auth = getUserAuth(req);
+                if (!auth) {
+                    const message = NOT_AUTHORIZED_MESSAGE;
+                    res.send(401, {
+                        message,
+                        error: message,
+                    })
+                    return next(false);
+                }
                 //if (!req.user) {
                 //    res.send(401, 'Unauthorized');
                 //    return next(false);
