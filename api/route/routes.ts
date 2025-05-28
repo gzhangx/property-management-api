@@ -106,7 +106,7 @@ export const routes = {
         func: sheet.saveSheetAuthData,
     },
     '/misc/browser/startBrowserControl': {
-        method: 'get',
+        method: 'post',
         func: browserControl.startBrowserControl,
     },
     '/auth/login': {
