@@ -8,7 +8,10 @@ export async function startBrowserControl(req: Request, res: Response) {
     try {
         const action = req.query['action'];
         console.log('doing action', action);
-      switch (action) {
+        switch (action) {
+            case 'stop':
+                await browserControl.stopUserBrowser(userID);
+                break;
           case 'pict':
               const pict = await takePicture(userID);
 
