@@ -9,10 +9,42 @@ type IBrowserInfo = {
     page: Page;
     date: Date;
 }
+
+
+const commonConfig = {
+    defaultViewport: {
+        width: 1224,
+        height: 768,
+        isMobile: false,
+    }
+};
+
+const driverConfig = {
+    pi: {
+        headless: true,
+        executablePath: '/usr/bin/chromium-browser',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        ...commonConfig
+    },
+}
+
+
+const  getCfg = () => {
+        if (process.env.PI) {
+            return driverConfig.pi;
+        }
+        return {
+            headless: false,
+            ...commonConfig,
+            //slowMo: 250 // slow down by 250ms
+        }
+    }
+
 export async function createPuppeteerDefault(options?: Parameters<VanillaPuppeteer['launch']>[0]): Promise<IBrowserInfo> {
 
     const browser = await puppeteer.launch(options || {
-        headless: true,
+        //headless: true,
+        ...getCfg(),
         userDataDir: '../secs/userData',
     });
     const page = await browser.newPage();
