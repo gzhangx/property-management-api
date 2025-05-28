@@ -35,6 +35,9 @@
     "passport-facebook": "^3.0.0",
     "passport-local": "^1.0.0",
     "passport-restify": "^1.0.1",
+    "puppeteer": "^24.9.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "restify": "^11.1.0",
     "ssh2": "^1.7.0",
     "uuid": "^8.3.2"
