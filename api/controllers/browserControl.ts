@@ -1,20 +1,40 @@
 import { Request, Response } from 'restify'
 import { getUserAuth } from '../util/pauth';
-import { NOT_AUTHORIZED_MESSAGE } from '../util/util';
-export async function startBrowserControl(req: Request, res: Response) {
-    console.log('here')
-    /*
-  const auth = getUserAuth(req);
-  if (!auth) {
-    const message = NOT_AUTHORIZED_MESSAGE;
-    return res.json({
-      message,
-      error: message,
-    })
-  }
-  */
-  try {
-    
+
+import * as browserControl from '../lib/browser';
+export async function startBrowserControl(req: Request, res: Response) {    
+    const auth = getUserAuth(req);  
+    const userID = auth!.userID;
+    try {
+        const action = req.query['action'];
+        console.log('doing action', action);
+      switch (action) {
+          case 'pict':
+              const pict = await takePicture(userID);
+
+              return res.sendRaw(200, pict, {
+                  contentType:'image/png'
+              })
+          default:
+              const options = {
+                  x: 0,
+                  y: 0,
+                  text: ''
+              }
+              switch (action) {
+                  case 'click':
+                      options.x = parseInt(req.query['x'])
+                      options.y = parseInt(req.query['y'])
+                      break;
+                  case 'text':
+                  case 'goto':
+                      options.text = req.query['text'];
+                      break;
+              }
+              await doAction(userID, action, options)
+              break;
+              
+        }
     //joins:{ table:{col:als}}
     
       return res.json({
@@ -27,4 +47,33 @@ export async function startBrowserControl(req: Request, res: Response) {
       errors: err.errors
     });
   }
+  
+}
+
+
+
+async function takePicture(userId: string): Promise<Uint8Array> {
+    const cache = await browserControl.getOrCreateUserBrowser(userId);
+    return await cache.page.screenshot();
+}
+
+async function doAction(userId: string, action: 'type' | 'click' | 'goto', options: {
+    x: number;
+    y: number;
+    text: string;
+}) {
+    const cache = await browserControl.getOrCreateUserBrowser(userId);
+
+    switch (action) {
+        case 'goto':
+            await cache.page.goto(options.text as string);
+            break;
+        case 'type':
+            await cache.page.keyboard.type(options.text as string);
+            break;
+        case 'click':
+            await cache.page.mouse.move(options.x, options.y);
+            await cache.page.mouse.click(options.x as number, options.y as number);
+            break;
+    }
 }
