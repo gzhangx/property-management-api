@@ -23,7 +23,9 @@ const driverConfig = {
     pi: {
         headless: true,
         //apt-get install chromium -y on rpy
-        executablePath: '/usr/bin/chromium',
+        //sudo apt install chromium-browser chromium-codecs-ffmpeg
+        // in pi, use pupp 10.0.0
+        executablePath: '/usr/bin/chromium-browser',
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
         ...commonConfig
     },
