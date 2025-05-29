@@ -22,7 +22,8 @@ const commonConfig = {
 const driverConfig = {
     pi: {
         headless: true,
-        executablePath: '/usr/bin/chromium-browser',
+        //apt-get install chromium -y on rpy
+        executablePath: '/usr/bin/chromium',
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
         ...commonConfig
     },
