@@ -1,7 +1,9 @@
 // Import the net module for TCP sockets and 'events' for EventEmitter
 //"C:\Program Files\Mozilla Firefox\firefox.exe" --marionette --profile d:\temp\testpf
+//"D:\gecko-dev\obj-x86_64-pc-windows-msvc\dist\bin\firefox.exe" --marionette --profile d:\temp\testpf
 import * as net from 'net';
 import { EventEmitter } from 'events';
+import { sleep } from '@gzhangx/googleapi/lib/util';
 
 // --- Type Definitions for Marionette Protocol ---
 
@@ -272,130 +274,135 @@ function getElementId(response: ElementReference): string {
     return response.value['element-6066-11e4-a52e-4f735466cecf'];
 }
 
+type FindEementUsing = 'css selector' | 'id' | 'name' | 'xpath' | 'link text' | 'partial link text';
+
+// xpath: //input[@type='text'] or //div[@id='myContainer']/button
+async function createGeckoDriver() {
+    const client = new MarionetteClient('127.0.0.1', 2828); // Default Marionette port
+    
+    await client.connect(); // Wait for connection
+    // 1. Create a new WebDriver session within Marionette
+    console.log('\n--- Creating new session ---');
+    const sessionCapabilities: SessionCapabilities = {
+        alwaysMatch: {
+            browserName: 'firefox',
+            'moz:firefoxOptions': {
+                // You can add specific Firefox options here if needed, e.g., headless
+                // args: ['-headless']
+            }
+        }
+    };
+    const newSessionCommand = {
+        capabilities: sessionCapabilities
+    };
+    const sessionResponse: { sessionId: string } = await client.send('WebDriver:NewSession', newSessionCommand);
+    const sessionId: string = sessionResponse.sessionId;
+    console.log(`Session created with ID: ${sessionId}`);
+    async function findElement(type: FindEementUsing, value: string, timeout: number = 15000): Promise<ElementReference> {
+        while (true) {
+            try {
+                const findButtonResponse: ElementReference = await client.send('WebDriver:FindElement', {
+                    sessionId: sessionId,
+                    using: type,
+                    value,
+                });
+                return findButtonResponse;
+            } catch (err) {
+                await sleep(500);
+                timeout -= 500;
+                if (timeout > 0) continue;
+                throw err;
+            }
+        }
+    }
+    async function findElements(type: FindEementUsing, value: string, timeout: number = 15000): Promise<ElementReference[]> {
+        while (true) {
+            try {
+                const findButtonResponse: ElementReference[] = await client.send('WebDriver:FindElement', {
+                    sessionId: sessionId,
+                    using: type,
+                    value,
+                });
+                return findButtonResponse;
+            } catch (err) {
+                await sleep(500);
+                timeout -= 500;
+                if (timeout > 0) continue;
+                throw err;
+            }
+        }
+    }
+    const sendKeys = async (ele: ElementReference, text: string) => {
+        await client.send('WebDriver:ElementSendKeys', {
+            sessionId: sessionId,
+            id: getElementId(ele),
+            text,
+        });
+    };
+    async function sendClick(ele: ElementReference) {
+        await client.send('WebDriver:ElementClick', {
+            sessionId: sessionId,
+            id: getElementId(ele),
+        });
+    };
+    return {
+        sessionId,
+        goto: async (url: string) => await client.send('WebDriver:Navigate', { url, sessionId: sessionId }),
+        findElement,
+        findElements,
+        sendKeys,
+        sendClick,
+        findElementAndSendKeys: async (type: FindEementUsing, value: string, text: string, timeout: number = 15000) => {
+            const ele = await findElement(type, value, timeout);
+            await sendKeys(ele, text);
+        },
+        findElementAndClick: async (type: FindEementUsing, value: string, timeout: number = 15000) => {
+            const ele = await findElement(type, value, timeout);
+            await sendClick(ele);
+        },
+        deleteSession: async () => {
+            // 7. Delete the session (close the browser)
+            console.log('\n--- Deleting session ---');
+            await client.send('WebDriver:DeleteSession', { sessionId: sessionId });
+            console.log('Session deleted.');
+        },
+        disconnect: () => client.disconnect(),
+    };
+     
+}
 // --- Example Usage ---
 async function main(): Promise<void> {
-    const client = new MarionetteClient('127.0.0.1', 2828); // Default Marionette port
+    
 
+    const clk = await createGeckoDriver();
     try {
-        await client.connect(); // Wait for connection
-
-        // 1. Create a new WebDriver session within Marionette
-        console.log('\n--- Creating new session ---');
-        const sessionCapabilities: SessionCapabilities = {
-            alwaysMatch: {
-                browserName: 'firefox',
-                'moz:firefoxOptions': {
-                    // You can add specific Firefox options here if needed, e.g., headless
-                    // args: ['-headless']
-                }
-            }
-        };
-        const newSessionCommand = {
-            capabilities: sessionCapabilities
-        };
-        const sessionResponse: { sessionId: string } = await client.send('WebDriver:NewSession', newSessionCommand);
-        const sessionId: string = sessionResponse.sessionId;
-        console.log(`Session created with ID: ${sessionId}`);
-
-        // 2. Navigate to Google
-        console.log('\n--- Navigating to google.com ---');
-        await client.send('WebDriver:Navigate', { url: 'https://www.google.com', sessionId: sessionId });
+        
+        await clk.goto('https://www.citi.com/');
         console.log('Navigated successfully.');
 
         // Add a small delay to ensure the page is fully loaded and elements are interactive
         //await new Promise(resolve => setTimeout(resolve, 2000));
 
+        let ele = await clk.findElement('css selector', 'input[id="password"]');
+        await clk.sendKeys(ele, process.env.pwd || '');
+        ele = await clk.findElement('css selector', 'button[id="signInBtn"]');
+        await clk.sendClick(ele);
+
+        await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
+        
         // --- Demonstrating different locator strategies ---
 
-        // Example A: Find element by Name
-        console.log('\n--- Finding element by Name (for search input) ---');
-        const findByNameResponse: ElementReference = await client.send('WebDriver:FindElement', {
-            sessionId: sessionId,
-            using: 'name',
-            value: 'q' // Google search input's name attribute
-        });
-        const searchInputIdByName: string = getElementId(findByNameResponse);
-        console.log(`Found search input by Name with ID: ${searchInputIdByName}`);
-
-        // Example B: Find element by ID
-        console.log('\n--- Finding element by ID (for search input) ---');
-        // Google's search input often has an ID like 'APjFqb' or similar, though it can change.
-        // Using a common one for demonstration.
-        const findByIdResponse: ElementReference = await client.send('WebDriver:FindElement', {
-            sessionId: sessionId,
-            using: 'id',
-            value: 'APjFqb' // Common ID for Google search input
-        });
-        const searchInputIdById: string = getElementId(findByIdResponse);
-        console.log(`Found search input by ID with ID: ${searchInputIdById}`);
-
-        // Example C: Find element by CSS Selector (for search input)
-        console.log('\n--- Finding element by CSS Selector (for search input) ---');
-        // This targets an <input> element with class 'gLFyf'.
-        // If you specifically wanted a <textarea> with this class, use 'textarea.gLFyf'.
-        const findByCssResponse: ElementReference = await client.send('WebDriver:FindElement', {
-            sessionId: sessionId,
-            using: 'css selector',
-            value: 'textarea.gLFyf' // Common CSS selector for Google search input
-        });
-        const searchInputIdByCss: string = getElementId(findByCssResponse);
-        console.log(`Found search input by CSS Selector with ID: ${searchInputIdByCss}`);
-
-        // --- Continuing with typing and clicking using one of the found elements ---
-        // We'll use the element found by CSS selector for the subsequent actions.
-
-        // 3. Type text into the search input field
-        console.log('\n--- Typing "Marionette automation" into search field (using CSS selector found element) ---');
-        const textToType: string = 'Marionette automation';
-        await client.send('WebDriver:ElementSendKeys', {
-            sessionId: sessionId,
-            id: searchInputIdByCss, // Use the element ID found by CSS selector
-            text: textToType
-        });
-        console.log(`Typed "${textToType}" into the search field.`);
-
-        // Add another delay to see the typed text
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // 4. Find the Google Search button using CSS selector
-        console.log('\n--- Finding Google Search button by CSS selector ---');
-        // Common CSS selector for Google search button is input[name="btnK"]
-        const findButtonResponse: ElementReference = await client.send('WebDriver:FindElement', {
-            sessionId: sessionId,
-            using: 'css selector',
-            value: '[name="btnK"]'
-        });
-        const searchButtonId: string = getElementId(findButtonResponse);
-        console.log(`Found Google Search button with ID: ${searchButtonId}`);
-
-        // 5. Click the Google Search button
-        console.log('\n--- Clicking the Google Search button ---');
-        await client.send('WebDriver:ElementClick', {
-            sessionId: sessionId,
-            id: searchButtonId
-        });
-        console.log('Google Search button clicked.');
-
-        // Add a delay to allow search results to load
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        // 6. Get the page title (after search, it should reflect the search query)
-        console.log('\n--- Getting page title after search ---');
-        const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });
-        const title: string = titleResponse;
-        console.log(`Page Title: ${title}`);
-
-        // 7. Delete the session (close the browser)
-        console.log('\n--- Deleting session ---');
-        await client.send('WebDriver:DeleteSession', { sessionId: sessionId });
-        console.log('Session deleted.');
+        
+            // 6. Get the page title (after search, it should reflect the search query)
+            //console.log('\n--- Getting page title after search ---');
+            //const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });
+            
+        
 
     } catch (error: any) {
         console.error('\n--- Automation Error ---');
         console.error('An error occurred during Marionette automation:', error);
-    } finally {
-        client.disconnect();
-    }
+    } 
 }
 
 main();
