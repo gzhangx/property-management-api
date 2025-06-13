@@ -1,6 +1,7 @@
 import { Browser, Page } from 'puppeteer';
 import puppeteer, { VanillaPuppeteer } from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { getBootSec } from './bootSec';
 // Apply the stealth plugin
 puppeteer.use(StealthPlugin());
 
@@ -25,22 +26,10 @@ const driverConfig = {
 
 
 export function getPuppeterMainConfig() {
-    const PuppBrowserUserDataDir = process.env.PuppBrowserUserDataDir;
-    if (!process.env.PuppBrowserExecPath) {
-        throw 'Puppter env PuppBrowserExecPath not set';
-    }
-    if (!PuppBrowserUserDataDir) {
-        throw 'Puppter env PuppBrowserUserDataDir not set';
-    }
-    const PuppBrowserDownloadDir = process.env.PuppBrowserDownloadDir
-    if (!PuppBrowserDownloadDir) {
-        throw 'Puppter env PuppBrowserDownloadDir not set';
-    }
-    return {
-        PuppBrowserUserDataDir,
-        PuppBrowserExecPath: process.env.PuppBrowserExecPath,
-        PuppBrowserDownloadDir,
-    };
+    const sec = getBootSec();
+    if (process.env.PI)
+        return sec.PuppConfig.pi;
+    return sec.PuppConfig.notPI;
 }
 
 const getCfg = () => {

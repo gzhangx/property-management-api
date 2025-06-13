@@ -7,6 +7,11 @@ export function getSqlConn() {
     return createConn(secs.mysql);
 }
 
+type PuppConfig = {
+    PuppBrowserExecPath: string;
+    PuppBrowserUserDataDir: string;
+    PuppBrowserDownloadDir: string;
+}
 type BootSec = {
     mysql: {
         host: string;
@@ -14,10 +19,15 @@ type BootSec = {
         password: string;
         database: string;
     };
-    azureMail: {
+    azureMail: {  //not used
         connectionString: string;
         from: string;
+    },
+    PuppConfig: {
+        pi: PuppConfig;
+        notPI: PuppConfig;
     }
+
 }
 
 export function getBootSec(): BootSec {
