@@ -11,13 +11,6 @@ type IBrowserInfo = {
 }
 
 
-const commonConfig = {
-    defaultViewport: {
-        width: 1224,
-        height: 768,
-        isMobile: false,
-    }
-};
 
 const driverConfig = {
     pi: {
@@ -25,31 +18,70 @@ const driverConfig = {
         //apt-get install chromium -y on rpy
         //sudo apt install chromium-browser chromium-codecs-ffmpeg
         // in pi, use pupp 10.0.0
-        executablePath: '/usr/bin/chromium-browser',
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        ...commonConfig
+        //executablePath: '/usr/bin/chromium-browser',        
+        
     },
 }
 
 
-const  getCfg = () => {
-        if (process.env.PI) {
-            return driverConfig.pi;
-        }
-        return {
-            headless: false,
-            ...commonConfig,
-            //slowMo: 250 // slow down by 250ms
-        }
+export function getPuppeterMainConfig() {
+    const PuppBrowserUserDataDir = process.env.PuppBrowserUserDataDir;
+    if (!process.env.PuppBrowserExecPath) {
+        throw 'Puppter env PuppBrowserExecPath not set';
     }
+    if (!PuppBrowserUserDataDir) {
+        throw 'Puppter env PuppBrowserUserDataDir not set';
+    }
+    const PuppBrowserDownloadDir = process.env.PuppBrowserDownloadDir
+    if (!PuppBrowserDownloadDir) {
+        throw 'Puppter env PuppBrowserDownloadDir not set';
+    }
+    return {
+        PuppBrowserUserDataDir,
+        PuppBrowserExecPath: process.env.PuppBrowserExecPath,
+        PuppBrowserDownloadDir,
+    };
+}
+
+const getCfg = () => {
+    
+    const pcfg = getPuppeterMainConfig();
+    const standardConfig = {
+        headless: false,
+        executablePath: pcfg.PuppBrowserExecPath,
+        args: [
+            '--no-sandbox', '--disable-setuid-sandbox',
+            '--disable-extensions', // Disable extensions for cleaner automation
+            `--user-data-dir=${pcfg.PuppBrowserUserDataDir}`, // Use a custom user data directory for the profile
+        ],
+        defaultViewport: {
+            width: 1224,
+            height: 768,
+            isMobile: false,
+        }
+        //slowMo: 250 // slow down by 250ms
+    };
+    if (process.env.PI) {
+        return Object.assign({}, standardConfig, driverConfig.pi);
+    }
+    return standardConfig;
+}
 
 export async function createPuppeteerDefault(options?: Parameters<VanillaPuppeteer['launch']>[0]): Promise<IBrowserInfo> {
 
+    const pcfg = getPuppeterMainConfig();
     const browser = await puppeteer.launch(options || {
         //headless: true,
         ...getCfg(),
-        userDataDir: '../secs/userData',
+        userDataDir: pcfg.PuppBrowserUserDataDir,
     });
+
+    const client = await browser.target().createCDPSession();
+    await client.send('Browser.setDownloadBehavior', {
+        behavior: 'allow',
+        downloadPath:  pcfg.PuppBrowserDownloadDir,
+    })
+
     const page = await browser.newPage();
     return {
         browser,
