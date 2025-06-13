@@ -1,6 +1,23 @@
 // Import the net module for TCP sockets and 'events' for EventEmitter
 //"C:\Program Files\Mozilla Firefox\firefox.exe" --marionette --profile d:\temp\testpf
-//"D:\gecko-dev\obj-x86_64-pc-windows-msvc\dist\bin\firefox.exe" --marionette --remote-debugging-port=9222 --no-remote --profile d:\temp\testpf -attach-console
+//"D:\gecko-dev\obj-x86_64-pc-windows-msvc\dist\bin\firefox.exe" --marionette --remote-debugging-port=0 --no-remote --profile d:\temp\testpf -attach-console
+
+// C: \Program Files\nodejs\node.exe--experimental - network - inspection.\test.js
+// Downloads will be saved to: D: \temp\testpf\downloads
+// Browser user data will be stored in: D: \temp\testpf
+// opts
+// { executablePath: 'D:/gecko-dev/obj-x86_64-pc-windows-msvc/dist/bin/firefox.exe', args: Array(8), handleSIGHUP: true, handleSIGTERM: true, handleSIGINT: true, … }
+// args: (8)['--wait-for-browser', 'about:blank', '--user-data-dir=D:\\temp\\testpf', '--disable-extensions', '--no-sandbox', '--remote-debugging-port=0', '--profile', 'D:\\temp\\systemp\\temp\\puppeteer_dev_firefox_profile-XqdByA']
+// dumpio: false
+// env: { ACSvcPort: '17532', ALLUSERSPROFILE: 'C:\\ProgramData', APPDATA: 'C:\\Users\\gzhan\\AppData\\Roaming', APPLICATION_INSIGHTS_NO_STATSBEAT: 'true', CHROME_CRASHPAD_PIPE_NAME: '\\\\.\\pipe\\crashpad_1784_OVDZGQNJFSHKICQD', … }
+// executablePath: 'D:/gecko-dev/obj-x86_64-pc-windows-msvc/dist/bin/firefox.exe'
+// handleSIGHUP: true
+// handleSIGINT: true
+// handleSIGTERM: true
+// onExit: async () => { \n            await this.cleanUserDataDir(launchArgs.userDataDir, { \n                isTemp: launchArgs.isTempUserDataDir, \n }); \n }
+// pipe: false
+
+
 import * as ws from 'ws';
 import * as net from 'net';
 import { EventEmitter } from 'events';
