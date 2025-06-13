@@ -1,9 +1,11 @@
 // Import the net module for TCP sockets and 'events' for EventEmitter
 //"C:\Program Files\Mozilla Firefox\firefox.exe" --marionette --profile d:\temp\testpf
-//"D:\gecko-dev\obj-x86_64-pc-windows-msvc\dist\bin\firefox.exe" --marionette --profile d:\temp\testpf
+//"D:\gecko-dev\obj-x86_64-pc-windows-msvc\dist\bin\firefox.exe" --marionette --remote-debugging-port=9222 --no-remote --profile d:\temp\testpf -attach-console
+import * as ws from 'ws';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import { sleep } from '@gzhangx/googleapi/lib/util';
+import { writeFileSync } from 'fs';
 
 // --- Type Definitions for Marionette Protocol ---
 
@@ -48,8 +50,12 @@ interface ElementReference {
 interface SessionCapabilities {
     alwaysMatch: {
         browserName: string;
+        webSocketUrl: boolean;
         'moz:firefoxOptions'?: {
             args?: string[];
+            prefs?: {
+                [key: string]: string | number | boolean;
+            };
             [key: string]: any;
         };
         [key: string]: any;
@@ -276,9 +282,110 @@ function getElementId(response: ElementReference): string {
 
 type FindEementUsing = 'css selector' | 'id' | 'name' | 'xpath' | 'link text' | 'partial link text';
 
+// --- WebSocket Client for CDP/Firefox Remote Protocol ---
+class CDPClient {
+    private ws: ws.WebSocket;
+    private messageIdCounter: number = 1;
+    private responsePromises: Map<number, { resolve: (value: any) => void; reject: (reason?: any) => void }> = new Map();
+    private eventHandlers: Map<string, Function[]> = new Map();
+    private sessionId: string | null = null; // Current session ID for the attached target
+
+    constructor(url: string) {
+        this.ws = new ws.WebSocket(url);
+
+        this.ws.onopen = () => {
+            console.log('[CDP] WebSocket opened.');
+        };
+
+        this.ws.onmessage = (event: ws.MessageEvent) => {
+            const message = JSON.parse(event.data.toString());
+
+            if (message.id) {
+                // This is a response to a command
+                const { resolve, reject } = this.responsePromises.get(message.id) as { resolve: (value: any) => void; reject: (reason?: any) => void };
+                if (message.error) {
+                    reject(message.error);
+                } else {
+                    resolve(message.result);
+                }
+                this.responsePromises.delete(message.id);
+            } else if (message.method) {
+                // This is an event pushed from the browser
+                this._handleEvent(message.method, message.params, message.sessionId);
+            }
+        };
+
+        this.ws.onerror = (error: ws.ErrorEvent) => {
+            console.error(`[CDP] WebSocket error: ${error.message}`);
+        };
+
+        this.ws.onclose = () => {
+            console.log('[CDP] WebSocket closed.');
+        };
+    }
+
+    /**
+     * Sends a CDP command to the browser and waits for its response.
+     * @param method The CDP method to call (e.g., 'Target.setDiscoverTargets').
+     * @param params The parameters for the method.
+     * @param sessionId Optional session ID if sending to a specific target.
+     * @returns A Promise that resolves with the command result.
+     */
+    public sendCommand<T = any>(method: string, params: object = {}, targetSessionId?: string): Promise<T> {
+        const id = this.messageIdCounter++;
+        const message = { id, method, params, sessionId: targetSessionId }; // sessionId goes into the message for target-specific commands
+
+        return new Promise((resolve, reject) => {
+            this.responsePromises.set(id, { resolve, reject });
+            this.ws.send(JSON.stringify(message));
+        });
+    }
+
+    /**
+     * Registers an event handler for a specific CDP event.
+     * @param eventName The CDP event name (e.g., 'Target.targetCreated').
+     * @param handler The callback function to execute when the event is received.
+     */
+    public on(eventName: string, handler: Function): void {
+        if (!this.eventHandlers.has(eventName)) {
+            this.eventHandlers.set(eventName, []);
+        }
+        this.eventHandlers.get(eventName)!.push(handler);
+    }
+
+    private _handleEvent(method: string, params: any, sessionId?: string): void {
+        const handlers = this.eventHandlers.get(method);
+        if (handlers) {
+            handlers.forEach(handler => handler(params, sessionId));
+        }
+    }
+
+    /**
+     * Waits for the WebSocket connection to be open.
+     * @returns Promise<void>
+     */
+    public async ready(): Promise<void> {
+        return new Promise((resolve) => {
+            if (this.ws.readyState === WebSocket.OPEN) {
+                resolve();
+            } else {
+                this.ws.onopen = () => resolve();
+            }
+        });
+    }
+
+    /**
+     * Closes the WebSocket connection.
+     */
+    public close(): void {
+        this.ws.close();
+    }
+}
+
 // xpath: //input[@type='text'] or //div[@id='myContainer']/button
 async function createGeckoDriver() {
     const client = new MarionetteClient('127.0.0.1', 2828); // Default Marionette port
+    const FIREFOX_DEBUG_PORT = 9222;
     
     await client.connect(); // Wait for connection
     // 1. Create a new WebDriver session within Marionette
@@ -286,9 +393,18 @@ async function createGeckoDriver() {
     const sessionCapabilities: SessionCapabilities = {
         alwaysMatch: {
             browserName: 'firefox',
+            webSocketUrl: true,
             'moz:firefoxOptions': {
                 // You can add specific Firefox options here if needed, e.g., headless
                 // args: ['-headless']
+                // Set Firefox preferences for file downloads
+                prefs: {
+                    'browser.download.folderList': 2, // 0: Desktop, 1: Downloads, 2: Custom
+                    'browser.download.dir': 'd:/temp/testdownloads', // Set your desired download path here
+                    'browser.download.useDownloadDir': true, // Always use the download directory
+                    'browser.download.manager.showWhenStarting': false, // Don't show the download manager
+                    'browser.helperApps.neverAsk.saveToDisk': 'application/pdf,image/png', // Auto-save these MIME types
+                }
             }
         }
     };
@@ -345,6 +461,56 @@ async function createGeckoDriver() {
             id: getElementId(ele),
         });
     };
+
+    async function sendMouseActions(x: number, y: number) {
+        console.log('\n--- Moving mouse and clicking at coordinates (e.g., 200, 200) ---');
+        // Define a sequence of actions: move, pointer down, pointer up
+        const actionsPayload = {
+            sessionId,
+            actions: [
+                {
+                    type: 'pointer', // Indicates a pointer input source (mouse, touch, pen)
+                    id: 'mouse1',    // A unique ID for this input source
+                    parameters: { pointerType: 'mouse' }, // Specify it's a mouse
+                    actions: [
+                        { type: 'pointerMove', duration: 100, x, y }, // Move to (200, 200) relative to viewport
+                        { type: 'pointerDown', button: 0 }, // Left mouse button (0 for left, 1 for middle, 2 for right)
+                        { type: 'pointerUp', button: 0 }    // Release left mouse button
+                    ]
+                }
+            ]
+        };
+        await client.send('WebDriver:PerformActions', actionsPayload);
+        // It's good practice to release actions after using them to reset input state
+        await client.send('WebDriver:ReleaseActions', { sessionId: sessionId });
+    }
+
+
+    //socket operations
+    // const browserClient = new CDPClient(`ws://localhost:${FIREFOX_DEBUG_PORT}/devtools/browser`);
+    // await browserClient.ready();
+    // console.log(`Connected to Firefox Browser Target on port ${FIREFOX_DEBUG_PORT}.`);
+
+    // let pageTargetId: string | null = null;
+    // let pageSessionId: string | null = null;
+
+    // // 2. Discover targets (tabs/pages)
+    // console.log('Discovering page targets...');
+    // browserClient.on('Target.targetCreated', (params: any) => {
+    //     if (params.targetInfo.type === 'page' && !pageTargetId) {
+    //         pageTargetId = params.targetInfo.targetId;
+    //         console.log(`Found page target: ${pageTargetId}`);
+    //     }
+    // });
+    // // Start discovering targets
+    // await browserClient.sendCommand('Target.setDiscoverTargets', { discover: true });
+
+    // // 3. Create a new tab/page and wait for it to be created
+    // console.log('Creating a new page...');
+    // const createTargetResult = await browserClient.sendCommand('Target.createTarget', { url: 'about:blank' });
+    // pageTargetId = createTargetResult.targetId;
+    // console.log(`New page created with targetId: ${pageTargetId}`);
+
     return {
         sessionId,
         goto: async (url: string) => await client.send('WebDriver:Navigate', { url, sessionId: sessionId }),
@@ -366,6 +532,16 @@ async function createGeckoDriver() {
             await client.send('WebDriver:DeleteSession', { sessionId: sessionId });
             console.log('Session deleted.');
         },
+        screenShoot: async () => {
+            const screenshotBase64: {
+                value: string;
+            } = await client.send('WebDriver:TakeScreenshot', { sessionId: sessionId });
+            const screenshotBuffer: Buffer = Buffer.from(screenshotBase64.value, 'base64');
+            //const screenshotFileName: string = `screenshot-${Date.now()}.png`;
+            //fs.writeFileSync(screenshotFileName, screenshotBuffer);  
+            return screenshotBuffer;
+        },
+        sendMouseActions,
         disconnect: () => client.disconnect(),
     };
      
@@ -388,7 +564,12 @@ async function main(): Promise<void> {
         ele = await clk.findElement('css selector', 'button[id="signInBtn"]');
         await clk.sendClick(ele);
 
+        await clk.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
         await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
+        await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
+        const buf = await clk.screenShoot();
+        writeFileSync('d://temp//testsc.png', buf);        
+        
         
         // --- Demonstrating different locator strategies ---
 

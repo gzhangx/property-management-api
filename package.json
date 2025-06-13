@@ -40,7 +40,8 @@
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "restify": "^11.1.0",
     "ssh2": "^1.7.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.36",
@@ -53,6 +54,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/restify": "^8.5.4",
     "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.18.1",
     "mocha": "^11.0.1",
     "nyc": "^15.1.0",
     "ts-node": "^10.9.1",
