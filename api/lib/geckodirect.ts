@@ -50,7 +50,6 @@ interface ElementReference {
 interface SessionCapabilities {
     alwaysMatch: {
         browserName: string;
-        webSocketUrl: boolean;
         'moz:firefoxOptions'?: {
             args?: string[];
             prefs?: {
@@ -393,7 +392,6 @@ async function createGeckoDriver() {
     const sessionCapabilities: SessionCapabilities = {
         alwaysMatch: {
             browserName: 'firefox',
-            webSocketUrl: true,
             'moz:firefoxOptions': {
                 // You can add specific Firefox options here if needed, e.g., headless
                 // args: ['-headless']
@@ -566,7 +564,7 @@ async function main(): Promise<void> {
 
         await clk.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
         await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
-        await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
+        await clk.findElementAndClick('xpath', '//button[text()="Export"]');
         const buf = await clk.screenShoot();
         writeFileSync('d://temp//testsc.png', buf);        
         
