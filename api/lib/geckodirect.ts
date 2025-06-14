@@ -549,7 +549,7 @@ async function createGeckoDriver() {
     const firefoxArgs = [
         '--marionette',
         '--profile', cfg.PuppBrowserUserDataDir,
-        `--remote-debugging-port=0`, // Allows remote connections            
+        //`--remote-debugging-port=0`, // Allows remote connections            
         // Use --no-remote to prevent interference with existing Firefox instances
         '--no-remote',
         // '-headless', // Uncomment to run in headless mode
@@ -653,6 +653,7 @@ async function createGeckoDriver() {
 
     return {
         sessionId,
+        client,
         goto: async (url: string) => await client.send('WebDriver:Navigate', { url, sessionId: sessionId }),
         findElement,
         findElements,
@@ -708,10 +709,103 @@ export async function testtestmain(ppp: string): Promise<void> {
         await clk.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
         await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
 
+
+        async function setupNetworkInterceptor() {
+            // Inject our interception script
+            const installres = await clk.client.send('WebDriver:ExecuteScript', {
+                script: `
+                // Store captured transaction URLs
+                window._transactionRequests = [];
+                
+                // Store original methods
+                const originalFetch = window.fetch;
+                const originalXHROpen = XMLHttpRequest.prototype.open;
+                const originalXHRSend = XMLHttpRequest.prototype.send;
+                
+                // Intercept fetch requests
+                window.fetch = async function(...args) {
+                  const [input] = args;
+                  const url = typeof input === 'string' ? input : input.url;
+                  console.log('fetching url',url);
+                  if (url.includes('transaction')) {
+                    window._transactionRequests.push({
+                      type: 'fetch',
+                      url: url,
+                      timestamp: new Date().toISOString()
+                    });
+                    
+                    try {
+                      const response = await originalFetch.apply(this, args);
+                      const clone = response.clone();
+                      //const text = await clone.text();
+                      //console.log('sssss',text, url)
+                      
+                      window._transactionRequests[window._transactionRequests.length - 1].response = 'test';
+                      return response;
+                    } catch (error) {
+                      window._transactionRequests[window._transactionRequests.length - 1].error = error.message;
+                      throw error;
+                    }
+                  }
+                  
+                  return originalFetch.apply(this, args);
+                };
+                
+                // Intercept XHR requests
+                XMLHttpRequest.prototype.open = function(method, url) {
+                  this._url = url;
+                  console.log('ddddddddddddd open', url)
+                  return originalXHROpen.apply(this, arguments);
+                };
+                
+                XMLHttpRequest.prototype.send = function(body) {
+                console.log('ddddddddddddd send', this._url)
+                  if (this._url.includes('transaction')) {
+                    const requestData = {
+                      type: 'xhr',
+                      url: this._url,
+                      method: this._method,
+                      timestamp: new Date().toISOString()
+                    };
+                    
+                    this.addEventListener('load', function() {
+                    requestData.rtype = typeof this.response;
+                      requestData.response = this.response.toString(); //this.responseText;
+                      requestData.status = this.status;
+                      window._transactionRequests.push(requestData);
+                    });
+                    
+                    this.addEventListener('error', function() {
+                      requestData.error = 'Request failed';
+                      window._transactionRequests.push(requestData);
+                    });
+                  }
+                  
+                  return originalXHRSend.apply(this, arguments);
+                };
+                
+                return true;
+              `,
+                args: []
+            });
+
+            console.log('Network interceptor installed', installres);
+        }
+        
+        await setupNetworkInterceptor();
         await clk.findElementAndClick('xpath', '//button[text()="Export"]');
         const buf = await clk.screenShoot();
         writeFileSync('d://temp//testsc.png', buf);        
         
+        const result = await clk.client.send('WebDriver:ExecuteScript', {
+            script: `
+              const requests = window._transactionRequests || [];
+              window._transactionRequests = [];  // Clear after reading
+              return requests;
+            `,
+            args: []
+        });
+        console.log('result', result)
         
         // --- Demonstrating different locator strategies ---
 
