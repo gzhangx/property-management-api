@@ -2,7 +2,7 @@ import { Request, Response } from 'restify'
 import { getUserAuth } from '../util/pauth';
 
 import * as browserControl from '../lib/geckodirect'
-import { delay } from '@gzhangx/googleapi/lib/msGraph/msauth';
+import * as db from '../lib/db'
 let driver: browserControl.VGInteralGeckoDriver | null = null;
 
 async function getDriver() {
@@ -30,15 +30,15 @@ export async function startBrowserControl(req: Request, res: Response) {
                     contentType: 'image/png'
                 })
             case 'citi':
-                const prms = {
-                    url: req.body['url'],
-                    password: req.body['password'],
-                };
-                if (!prms.url || !prms.password) {
+                const pwdRes = await db.doQueryOneRow('select * from userOptions where id=?', ['testingpwd']);
+                    const pass = pwdRes.data;
+                    const res1 = await db.doQueryOneRow('select * from userOptions where id=?', ['testurl']);
+                    const url = res1.data;
+                if (!url || !pass) {
                     return res.send(400, 'falsed no url pwd');
                 }
                 await getDriver();
-                const csv = await browserControl.testExampleCCItt(driver as browserControl.VGInteralGeckoDriver, prms.url, prms.password);
+                const csv = await browserControl.testExampleCCItt(driver as browserControl.VGInteralGeckoDriver, url, pass);
                 return res.sendRaw(200, csv[0].response, {
                     contentType: 'text/csv'
                 })
