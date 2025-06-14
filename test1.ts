@@ -13,7 +13,9 @@ async function test() {
     //    url: 'https://www.citi.com',
     //    password: res.data
     //})
-    await testExampleCCItt(url,pass);
+    const data = await testExampleCCItt(url, pass);
+    console.log(data[0].response)
+    
 }
 
 test();
