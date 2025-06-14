@@ -7,7 +7,7 @@ let driver: browserControl.VGInteralGeckoDriver | null = null;
 
 async function getDriver() {
     if (driver) return driver;
-    driver = await browserControl.createGeckoDriverAndProcess();
+    driver = await browserControl.createGeckoDriverAndProcess(undefined, process.env.PI === 'true');
     return driver as browserControl.VGInteralGeckoDriver;
 }
 
@@ -94,10 +94,12 @@ async function doAction(action: 'type' | 'click' | 'goto', options: {
             //await driver.type(options.text, {
             //    delay: 10,
             //});
+            await driver.typeToActiveElement(options.text);
             break;
         case 'click':
             //await driver.move(options.x, options.y);
             //await cache.page.mouse.click(options.x as number, options.y as number);
+            await driver.sendMouseActions(options.x, options.y)
             break;
     }
 }

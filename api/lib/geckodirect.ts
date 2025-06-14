@@ -562,7 +562,9 @@ export type VGInteralGeckoDriver = {
     goto: (url: string) => Promise<any>;
     findElement: (type: FindEementUsing, value: string, timeout?: number) => Promise<ElementReference>;
     findElements: (type: FindEementUsing, value: string, timeout?: number) => Promise<ElementReference[]>;
-    sendKeys: (ele: ElementReference, text: string) => Promise<void>; sendClick: (ele: ElementReference) => Promise<void>;
+    sendKeys: (ele: ElementReference, text: string) => Promise<void>;
+    sendClick: (ele: ElementReference) => Promise<void>;
+    typeToActiveElement: (text: string) => Promise<any>;
     findElementAndSendKeys: (type: FindEementUsing, value: string, text: string, timeout?: number) => Promise<void>;
     findElementAndClick: (type: FindEementUsing, value: string, timeout?: number) => Promise<void>;
     deleteSession: () => Promise<void>;
@@ -662,7 +664,7 @@ export async function createGeckoDriverAndProcess<T>(processor?: (drv: VGInteral
         };
 
         async function sendMouseActions(x: number, y: number) {
-            console.log('\n--- Moving mouse and clicking at coordinates (e.g., 200, 200) ---');
+            console.log(`\n--- Moving mouse and clicking at coordinates (${x}, ${y}) ---`);
             // Define a sequence of actions: move, pointer down, pointer up
             const actionsPayload = {
                 sessionId,
@@ -673,7 +675,7 @@ export async function createGeckoDriverAndProcess<T>(processor?: (drv: VGInteral
                         parameters: { pointerType: 'mouse' }, // Specify it's a mouse
                         actions: [
                             { type: 'pointerMove', duration: 100, x, y }, // Move to (200, 200) relative to viewport
-                            { type: 'pointerDown', button: 0 }, // Left mouse button (0 for left, 1 for middle, 2 for right)
+                            { type: 'pointerDown', duration: 100, button: 0 }, // Left mouse button (0 for left, 1 for middle, 2 for right)
                             { type: 'pointerUp', button: 0 }    // Release left mouse button
                         ]
                     }
@@ -685,6 +687,19 @@ export async function createGeckoDriverAndProcess<T>(processor?: (drv: VGInteral
         }
 
 
+        async function typeToActiveElement(text: string) {
+            // Get the currently active element (where focus is)
+            const activeElement = await client.send('WebDriver:GetActiveElement', {
+                sessionId: sessionId
+            });
+
+            // Send keys to the active element
+            return await client.send('WebDriver:ElementSendKeys', {
+                sessionId: sessionId,
+                id: getElementId(activeElement), // The element ID of the active element
+                text: text
+            });
+        }
         const driver: VGInteralGeckoDriver = {
             sessionId,
             client,
@@ -692,6 +707,7 @@ export async function createGeckoDriverAndProcess<T>(processor?: (drv: VGInteral
             findElement,
             findElements,
             sendKeys,
+            typeToActiveElement,
             sendClick,
             findElementAndSendKeys: async (type: FindEementUsing, value: string, text: string, timeout: number = 15000) => {
                 const ele = await findElement(type, value, timeout);
