@@ -1,6 +1,6 @@
 //import { doCiti } from './api/controllers/browserControl';
 import * as db from './api/lib/db'
-import { testExampleCCItt } from './api/lib/geckodirect';
+import { createGeckoDriverAndProcess, ExampleResult, testExampleCCItt } from './api/lib/geckodirect';
 
 async function test() {
     const res = await db.doQueryOneRow('select * from userOptions where id=?', ['testingpwd']);
@@ -13,7 +13,10 @@ async function test() {
     //    url: 'https://www.citi.com',
     //    password: res.data
     //})
-    const data = await testExampleCCItt(url, pass, true);
+    const data: ExampleResult[] = (await createGeckoDriverAndProcess(async driver => {
+        return await testExampleCCItt(driver, url, pass);
+    })) as ExampleResult[];
+    
     console.log(data[0].response)
     
 }

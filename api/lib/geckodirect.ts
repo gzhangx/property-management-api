@@ -571,7 +571,7 @@ export type VGInteralGeckoDriver = {
     disconnect: () => void;
     shutdown: () => boolean;
 }
-export async function createGeckoDriverAndProcess<T>(processor: (drv: VGInteralGeckoDriver)=>Promise<T>, headless: boolean = false) {
+export async function createGeckoDriverAndProcess<T>(processor?: (drv: VGInteralGeckoDriver)=>Promise<T>, headless: boolean = true) {
     const cfg = getPuppeterMainConfig();
 
 
@@ -720,9 +720,13 @@ export async function createGeckoDriverAndProcess<T>(processor: (drv: VGInteralG
             disconnect: () => client.disconnect(),
             shutdown: () => firefoxProcess.kill(),
         };
+        if (!processor) return driver;
         return await processor(driver);
     } finally {
-        firefoxProcess.kill();
+        if (processor) {
+            //if we are not caching, kill process, else leave it alone as we are using the same instance
+            firefoxProcess.kill();
+        }
     }
      
 }
@@ -731,7 +735,7 @@ export async function createGeckoDriverAndProcess<T>(processor: (drv: VGInteralG
 
 
 // --- Example Usage ---
-type ExampleResult = {
+export type ExampleResult = {
     type: 'xhr'
     url: string;
     method: string;
@@ -740,29 +744,29 @@ type ExampleResult = {
     status: number;
     response: string;
 };
-export async function testExampleCCItt(url: string, ppp: string, headless: boolean) {
+export async function testExampleCCItt(geckoDriver: VGInteralGeckoDriver, url: string, ppp: string) {
     
 
-    return await createGeckoDriverAndProcess(async geckoDriver => {
-        await geckoDriver.goto(url);
-        console.log('Navigated successfully.');
+    
+    await geckoDriver.goto(url);
+    console.log('Navigated successfully.');
 
-        // Add a small delay to ensure the page is fully loaded and elements are interactive
-        //await new Promise(resolve => setTimeout(resolve, 2000));
+    // Add a small delay to ensure the page is fully loaded and elements are interactive
+    //await new Promise(resolve => setTimeout(resolve, 2000));
 
-        let ele = await geckoDriver.findElement('css selector', 'input[id="password"]');
-        await geckoDriver.sendKeys(ele, ppp);
-        ele = await geckoDriver.findElement('css selector', 'button[id="signInBtn"]');
-        await geckoDriver.sendClick(ele);
+    let ele = await geckoDriver.findElement('css selector', 'input[id="password"]');
+    await geckoDriver.sendKeys(ele, ppp);
+    ele = await geckoDriver.findElement('css selector', 'button[id="signInBtn"]');
+    await geckoDriver.sendClick(ele);
 
-        await geckoDriver.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
-        await geckoDriver.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
+    await geckoDriver.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
+    await geckoDriver.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
 
 
-        async function setupNetworkInterceptor() {
-            // Inject our interception script
-            const installres = await geckoDriver.client.send('WebDriver:ExecuteScript', {
-                script: `
+    async function setupNetworkInterceptor() {
+        // Inject our interception script
+        const installres = await geckoDriver.client.send('WebDriver:ExecuteScript', {
+            script: `
                 // Store captured transaction URLs
                 window._transactionRequests = [];
                 
@@ -851,41 +855,38 @@ export async function testExampleCCItt(url: string, ppp: string, headless: boole
                 
                 return true;
               `,
-                args: []
-            });
+            args: []
+        });
 
-            console.log('Network interceptor installed', installres);
-        }
+        console.log('Network interceptor installed', installres);
+    }
 
-        await setupNetworkInterceptor();
-        await geckoDriver.findElementAndClick('xpath', '//button[text()="Export"]');
-        //const buf = await geckoDriver.screenShoot();
-        //writeFileSync('d://temp//testsc.png', buf);
+    await setupNetworkInterceptor();
+    await geckoDriver.findElementAndClick('xpath', '//button[text()="Export"]');
+    //const buf = await geckoDriver.screenShoot();
+    //writeFileSync('d://temp//testsc.png', buf);
 
-        let result: {
-            value: ExampleResult[];
-        } = { value: [] };
-        while (true) {
-            result = await geckoDriver.client.send('WebDriver:ExecuteScript', {
-                script: `
+    let result: {
+        value: ExampleResult[];
+    } = { value: [] };
+    while (true) {
+        result = await geckoDriver.client.send('WebDriver:ExecuteScript', {
+            script: `
               const requests = window._transactionRequests || [];
               window._transactionRequests = [];  // Clear after reading
               return requests;
             `,
-                args: []
-            });
-            if (result.value.length > 0) break;
-            console.log('Waint for result');
-            await sleep(1000);
-        }
+            args: []
+        });
+        if (result.value.length > 0) break;
+        console.log('Waint for result');
+        await sleep(1000);
+    }
 
-        //console.log('\n--- Getting page title after search ---');
-        //const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });     
-        geckoDriver.shutdown();
-        return result.value;
-    }, headless);
-        
-    
+    //console.log('\n--- Getting page title after search ---');
+    //const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });     
+    geckoDriver.shutdown();
+    return result.value;
 }
 
 
