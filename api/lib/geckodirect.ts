@@ -571,7 +571,7 @@ export type VGInteralGeckoDriver = {
     disconnect: () => void;
     shutdown: () => boolean;
 }
-export async function createGeckoDriverAndProcess<T>(processor: (drv: VGInteralGeckoDriver)=>Promise<T>) {
+export async function createGeckoDriverAndProcess<T>(processor: (drv: VGInteralGeckoDriver)=>Promise<T>, headless: boolean = false) {
     const cfg = getPuppeterMainConfig();
 
 
@@ -582,8 +582,11 @@ export async function createGeckoDriverAndProcess<T>(processor: (drv: VGInteralG
         //`--remote-debugging-port=0`, // Allows remote connections            
         // Use --no-remote to prevent interference with existing Firefox instances
         '--no-remote',
-        // '-headless', // Uncomment to run in headless mode
+        //'-headless', // Uncomment to run in headless mode
     ];
+    if (headless) {
+        firefoxArgs.push('-headless')
+    }
 
     const firefoxProcess = spawn(cfg.PuppBrowserExecPath, firefoxArgs, {
         stdio: ['ignore', 'pipe', 'pipe'] // Capture stdout and stderr
@@ -737,7 +740,7 @@ type ExampleResult = {
     status: number;
     response: string;
 };
-export async function testExampleCCItt(url: string, ppp: string) {
+export async function testExampleCCItt(url: string, ppp: string, headless: boolean) {
     
 
     return await createGeckoDriverAndProcess(async geckoDriver => {
@@ -880,7 +883,7 @@ export async function testExampleCCItt(url: string, ppp: string) {
         //const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });     
         geckoDriver.shutdown();
         return result.value;
-    });
+    }, headless);
         
     
 }
