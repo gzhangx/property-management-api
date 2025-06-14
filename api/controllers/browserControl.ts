@@ -38,10 +38,15 @@ export async function startBrowserControl(req: Request, res: Response) {
                     return res.send(400, 'falsed no url pwd');
                 }
                 await getDriver();
-                const csv = await browserControl.testExampleCCItt(driver as browserControl.VGInteralGeckoDriver, url, pass);
-                return res.sendRaw(200, csv[0].response, {
-                    contentType: 'text/csv'
-                })
+                try {
+                    const csv = await browserControl.testExampleCCItt(driver as browserControl.VGInteralGeckoDriver, url, pass);
+                    return res.sendRaw(200, csv[0].response, {
+                        contentType: 'text/csv'
+                    })
+                } finally {
+                    driver?.shutdown();
+                    driver = null;
+                }
                 break;
             default:
                 const options = {
