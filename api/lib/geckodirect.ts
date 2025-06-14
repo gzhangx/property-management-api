@@ -770,8 +770,8 @@ export async function testtestmain(ppp: string): Promise<void> {
                     
                     this.addEventListener('load', function() {
                     requestData.rtype = typeof this.response;
-                      requestData.response = this.response.toString(); //this.responseText;
-                      requestData.status = this.status;
+                      requestData.response = this.response.text(); //this.responseText;
+                      requestData.status = this.status;                      
                       window._transactionRequests.push(requestData);
                     });
                     
