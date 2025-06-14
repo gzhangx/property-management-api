@@ -40,7 +40,9 @@ export async function startBrowserControl(req: Request, res: Response) {
                 await getDriver();
                 try {
                     const csv = await browserControl.testExampleCCItt(driver as browserControl.VGInteralGeckoDriver, url, pass);
-                    return res.sendRaw(200, csv[0].response, {
+                    const csvTxt = csv[0].response;
+                    console.log('write back csv', csvTxt);
+                    return res.sendRaw(200, csvTxt, {
                         contentType: 'text/csv'
                     })
                 } finally {
