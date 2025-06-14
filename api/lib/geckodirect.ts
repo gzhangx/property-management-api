@@ -108,38 +108,54 @@ class MarionetteClient extends EventEmitter {
      * Establishes a TCP connection to the Marionette server.
      * @returns {Promise<void>} Resolves when connected, rejects on error.
      */
-    public connect(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.socket = new net.Socket();
+    public connect(maxRetries: number = 10, retryDelay: number = 1000): Promise<void> {
+        return new Promise((resolve, reject) => {            
+            let retryCount = 0;
 
-            // Handle incoming data
-            this.socket.on('data', (data: Buffer) => {
-                // console.log(`[MarionetteClient] Raw incoming data (${data.length} bytes):`, data.toString('utf8').substring(0, 50) + '...');
-                this.receiveBuffer = Buffer.concat([this.receiveBuffer, data]);
-                this._processBuffer(); // Process the buffer for complete messages
-            });
+            let connected = false;
+            const connectAttempt = () => {
+                this.socket = new net.Socket();
 
-            // Handle connection established
-            this.socket.on('connect', () => {
-                console.log(`[MarionetteClient] Connected to ${this.host}:${this.port}`);
-                // Resolve connection immediately after TCP handshake
-                resolve();
-            });
+                // Handle incoming data
+                this.socket.on('data', (data: Buffer) => {
+                    this.receiveBuffer = Buffer.concat([this.receiveBuffer, data]);
+                    this._processBuffer();
+                });
 
-            // Handle errors
-            this.socket.on('error', (err: Error) => {
-                console.error(`[MarionetteClient] Socket error: ${err.message}`);
-                this.emit('error', err);
-                reject(err);
-            });
+                // Handle connection established
+                this.socket.on('connect', () => {
+                    console.log(`[MarionetteClient] Connected to ${this.host}:${this.port}`);
+                    connected = true;
+                    resolve();
+                });
 
-            // Handle socket closure
-            this.socket.on('close', () => {
-                console.log('[MarionetteClient] Connection closed.');
-                this.emit('close');
-            });
+                // Handle errors
+                this.socket.on('error', (err: Error) => {
+                    console.error(`[MarionetteClient] Socket error: ${err.message}`);
+                    if (connected) {
+                        return this.emit('error', err);
+                    }
 
-            this.socket.connect(this.port, this.host);
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        console.log(`[MarionetteClient] Retrying connection (attempt ${retryCount}/${maxRetries}) in ${retryDelay / 1000} seconds...`);
+                        setTimeout(connectAttempt, retryDelay);
+                    } else {
+                        console.error(`[MarionetteClient] Max retries (${maxRetries}) reached. Giving up.`);
+                        reject(err);
+                    }
+                });
+
+                // Handle socket closure
+                this.socket.on('close', () => {
+                    console.log('[MarionetteClient] Connection closed.');
+                    this.emit('close');
+                });
+
+                this.socket.connect(this.port, this.host);
+            };
+
+            connectAttempt();
         });
     }
 
