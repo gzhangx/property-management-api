@@ -557,7 +557,21 @@ async function launchFirefoxAndConnectBiDi() {
 }
 
 // xpath: //input[@type='text'] or //div[@id='myContainer']/button
-async function createGeckoDriver() {
+export type VGInteralGeckoDriver = {
+    sessionId: string; client: MarionetteClient;
+    goto: (url: string) => Promise<any>;
+    findElement: (type: FindEementUsing, value: string, timeout?: number) => Promise<ElementReference>;
+    findElements: (type: FindEementUsing, value: string, timeout?: number) => Promise<ElementReference[]>;
+    sendKeys: (ele: ElementReference, text: string) => Promise<void>; sendClick: (ele: ElementReference) => Promise<void>;
+    findElementAndSendKeys: (type: FindEementUsing, value: string, text: string, timeout?: number) => Promise<void>;
+    findElementAndClick: (type: FindEementUsing, value: string, timeout?: number) => Promise<void>;
+    deleteSession: () => Promise<void>;
+    screenShoot: () => Promise<Buffer<ArrayBufferLike>>;
+    sendMouseActions: (x: number, y: number) => Promise<void>;
+    disconnect: () => void;
+    shutdown: () => boolean;
+}
+export async function createGeckoDriverAndProcess<T>(processor: (drv: VGInteralGeckoDriver)=>Promise<T>) {
     const cfg = getPuppeterMainConfig();
 
 
@@ -575,133 +589,138 @@ async function createGeckoDriver() {
         stdio: ['ignore', 'pipe', 'pipe'] // Capture stdout and stderr
     });
 
-    const client = new MarionetteClient('127.0.0.1', 2828); // Default Marionette port    
+    try {
+        const client = new MarionetteClient('127.0.0.1', 2828); // Default Marionette port    
     
-    await client.connect(); // Wait for connection
-    // 1. Create a new WebDriver session within Marionette
-    console.log('\n--- Creating new session ---');
-    const sessionCapabilities: SessionCapabilities = {
-        alwaysMatch: {
-            browserName: 'firefox',
-            'moz:firefoxOptions': {                
-                // args: ['-headless']                
-            }
-        }
-    };
-    const newSessionCommand = {
-        capabilities: sessionCapabilities
-    };
-    const sessionResponse: { sessionId: string } = await client.send('WebDriver:NewSession', newSessionCommand);
-    const sessionId: string = sessionResponse.sessionId;
-
-    console.log(`Session created with ID: ${sessionId}`);
-    async function findElement(type: FindEementUsing, value: string, timeout: number = 15000): Promise<ElementReference> {
-        while (true) {
-            try {
-                const findButtonResponse: ElementReference = await client.send('WebDriver:FindElement', {
-                    sessionId: sessionId,
-                    using: type,
-                    value,
-                });
-                return findButtonResponse;
-            } catch (err) {
-                await sleep(500);
-                timeout -= 500;
-                if (timeout > 0) continue;
-                throw err;
-            }
-        }
-    }
-    async function findElements(type: FindEementUsing, value: string, timeout: number = 15000): Promise<ElementReference[]> {
-        while (true) {
-            try {
-                const findButtonResponse: ElementReference[] = await client.send('WebDriver:FindElement', {
-                    sessionId: sessionId,
-                    using: type,
-                    value,
-                });
-                return findButtonResponse;
-            } catch (err) {
-                await sleep(500);
-                timeout -= 500;
-                if (timeout > 0) continue;
-                throw err;
-            }
-        }
-    }
-    const sendKeys = async (ele: ElementReference, text: string) => {
-        await client.send('WebDriver:ElementSendKeys', {
-            sessionId: sessionId,
-            id: getElementId(ele),
-            text,
-        });
-    };
-    async function sendClick(ele: ElementReference) {
-        await client.send('WebDriver:ElementClick', {
-            sessionId: sessionId,
-            id: getElementId(ele),
-        });
-    };
-
-    async function sendMouseActions(x: number, y: number) {
-        console.log('\n--- Moving mouse and clicking at coordinates (e.g., 200, 200) ---');
-        // Define a sequence of actions: move, pointer down, pointer up
-        const actionsPayload = {
-            sessionId,
-            actions: [
-                {
-                    type: 'pointer', // Indicates a pointer input source (mouse, touch, pen)
-                    id: 'mouse1',    // A unique ID for this input source
-                    parameters: { pointerType: 'mouse' }, // Specify it's a mouse
-                    actions: [
-                        { type: 'pointerMove', duration: 100, x, y }, // Move to (200, 200) relative to viewport
-                        { type: 'pointerDown', button: 0 }, // Left mouse button (0 for left, 1 for middle, 2 for right)
-                        { type: 'pointerUp', button: 0 }    // Release left mouse button
-                    ]
+        await client.connect(); // Wait for connection
+        // 1. Create a new WebDriver session within Marionette
+        console.log('\n--- Creating new session ---');
+        const sessionCapabilities: SessionCapabilities = {
+            alwaysMatch: {
+                browserName: 'firefox',
+                'moz:firefoxOptions': {
+                    // args: ['-headless']                
                 }
-            ]
+            }
         };
-        await client.send('WebDriver:PerformActions', actionsPayload);
-        // It's good practice to release actions after using them to reset input state
-        await client.send('WebDriver:ReleaseActions', { sessionId: sessionId });
+        const newSessionCommand = {
+            capabilities: sessionCapabilities
+        };
+        const sessionResponse: { sessionId: string } = await client.send('WebDriver:NewSession', newSessionCommand);
+        const sessionId: string = sessionResponse.sessionId;
+
+        console.log(`Session created with ID: ${sessionId}`);
+        async function findElement(type: FindEementUsing, value: string, timeout: number = 15000): Promise<ElementReference> {
+            while (true) {
+                try {
+                    const findButtonResponse: ElementReference = await client.send('WebDriver:FindElement', {
+                        sessionId: sessionId,
+                        using: type,
+                        value,
+                    });
+                    return findButtonResponse;
+                } catch (err) {
+                    await sleep(500);
+                    timeout -= 500;
+                    if (timeout > 0) continue;
+                    throw err;
+                }
+            }
+        }
+        async function findElements(type: FindEementUsing, value: string, timeout: number = 15000): Promise<ElementReference[]> {
+            while (true) {
+                try {
+                    const findButtonResponse: ElementReference[] = await client.send('WebDriver:FindElement', {
+                        sessionId: sessionId,
+                        using: type,
+                        value,
+                    });
+                    return findButtonResponse;
+                } catch (err) {
+                    await sleep(500);
+                    timeout -= 500;
+                    if (timeout > 0) continue;
+                    throw err;
+                }
+            }
+        }
+        const sendKeys = async (ele: ElementReference, text: string) => {
+            await client.send('WebDriver:ElementSendKeys', {
+                sessionId: sessionId,
+                id: getElementId(ele),
+                text,
+            });
+        };
+        async function sendClick(ele: ElementReference) {
+            await client.send('WebDriver:ElementClick', {
+                sessionId: sessionId,
+                id: getElementId(ele),
+            });
+        };
+
+        async function sendMouseActions(x: number, y: number) {
+            console.log('\n--- Moving mouse and clicking at coordinates (e.g., 200, 200) ---');
+            // Define a sequence of actions: move, pointer down, pointer up
+            const actionsPayload = {
+                sessionId,
+                actions: [
+                    {
+                        type: 'pointer', // Indicates a pointer input source (mouse, touch, pen)
+                        id: 'mouse1',    // A unique ID for this input source
+                        parameters: { pointerType: 'mouse' }, // Specify it's a mouse
+                        actions: [
+                            { type: 'pointerMove', duration: 100, x, y }, // Move to (200, 200) relative to viewport
+                            { type: 'pointerDown', button: 0 }, // Left mouse button (0 for left, 1 for middle, 2 for right)
+                            { type: 'pointerUp', button: 0 }    // Release left mouse button
+                        ]
+                    }
+                ]
+            };
+            await client.send('WebDriver:PerformActions', actionsPayload);
+            // It's good practice to release actions after using them to reset input state
+            await client.send('WebDriver:ReleaseActions', { sessionId: sessionId });
+        }
+
+
+        const driver: VGInteralGeckoDriver = {
+            sessionId,
+            client,
+            goto: async (url: string) => await client.send('WebDriver:Navigate', { url, sessionId: sessionId }),
+            findElement,
+            findElements,
+            sendKeys,
+            sendClick,
+            findElementAndSendKeys: async (type: FindEementUsing, value: string, text: string, timeout: number = 15000) => {
+                const ele = await findElement(type, value, timeout);
+                await sendKeys(ele, text);
+            },
+            findElementAndClick: async (type: FindEementUsing, value: string, timeout: number = 15000) => {
+                const ele = await findElement(type, value, timeout);
+                await sendClick(ele);
+            },
+            deleteSession: async () => {
+                // 7. Delete the session (close the browser)
+                console.log('\n--- Deleting session ---');
+                await client.send('WebDriver:DeleteSession', { sessionId: sessionId });
+                console.log('Session deleted.');
+            },
+            screenShoot: async () => {
+                const screenshotBase64: {
+                    value: string;
+                } = await client.send('WebDriver:TakeScreenshot', { sessionId: sessionId });
+                const screenshotBuffer: Buffer = Buffer.from(screenshotBase64.value, 'base64');
+                //const screenshotFileName: string = `screenshot-${Date.now()}.png`;
+                //fs.writeFileSync(screenshotFileName, screenshotBuffer);  
+                return screenshotBuffer;
+            },
+            sendMouseActions,
+            disconnect: () => client.disconnect(),
+            shutdown: () => firefoxProcess.kill(),
+        };
+        return await processor(driver);
+    } finally {
+        firefoxProcess.kill();
     }
-
-
-    return {
-        sessionId,
-        client,
-        goto: async (url: string) => await client.send('WebDriver:Navigate', { url, sessionId: sessionId }),
-        findElement,
-        findElements,
-        sendKeys,
-        sendClick,
-        findElementAndSendKeys: async (type: FindEementUsing, value: string, text: string, timeout: number = 15000) => {
-            const ele = await findElement(type, value, timeout);
-            await sendKeys(ele, text);
-        },
-        findElementAndClick: async (type: FindEementUsing, value: string, timeout: number = 15000) => {
-            const ele = await findElement(type, value, timeout);
-            await sendClick(ele);
-        },
-        deleteSession: async () => {
-            // 7. Delete the session (close the browser)
-            console.log('\n--- Deleting session ---');
-            await client.send('WebDriver:DeleteSession', { sessionId: sessionId });
-            console.log('Session deleted.');
-        },
-        screenShoot: async () => {
-            const screenshotBase64: {
-                value: string;
-            } = await client.send('WebDriver:TakeScreenshot', { sessionId: sessionId });
-            const screenshotBuffer: Buffer = Buffer.from(screenshotBase64.value, 'base64');
-            //const screenshotFileName: string = `screenshot-${Date.now()}.png`;
-            //fs.writeFileSync(screenshotFileName, screenshotBuffer);  
-            return screenshotBuffer;
-        },
-        sendMouseActions,
-        disconnect: () => client.disconnect(),
-        shutdown: () => firefoxProcess.kill(),
-    };
      
 }
 
@@ -721,27 +740,26 @@ type ExampleResult = {
 export async function testExampleCCItt(url: string, ppp: string) {
     
 
-    const geckoDriver = await createGeckoDriver();
-        
-    await geckoDriver.goto(url);
-    console.log('Navigated successfully.');
+    return await createGeckoDriverAndProcess(async geckoDriver => {
+        await geckoDriver.goto(url);
+        console.log('Navigated successfully.');
 
-    // Add a small delay to ensure the page is fully loaded and elements are interactive
-    //await new Promise(resolve => setTimeout(resolve, 2000));
+        // Add a small delay to ensure the page is fully loaded and elements are interactive
+        //await new Promise(resolve => setTimeout(resolve, 2000));
 
-    let ele = await geckoDriver.findElement('css selector', 'input[id="password"]');
-    await geckoDriver.sendKeys(ele, ppp);
-    ele = await geckoDriver.findElement('css selector', 'button[id="signInBtn"]');
-    await geckoDriver.sendClick(ele);
+        let ele = await geckoDriver.findElement('css selector', 'input[id="password"]');
+        await geckoDriver.sendKeys(ele, ppp);
+        ele = await geckoDriver.findElement('css selector', 'button[id="signInBtn"]');
+        await geckoDriver.sendClick(ele);
 
-    await geckoDriver.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
-    await geckoDriver.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
+        await geckoDriver.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
+        await geckoDriver.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
 
 
-    async function setupNetworkInterceptor() {
-        // Inject our interception script
-        const installres = await geckoDriver.client.send('WebDriver:ExecuteScript', {
-            script: `
+        async function setupNetworkInterceptor() {
+            // Inject our interception script
+            const installres = await geckoDriver.client.send('WebDriver:ExecuteScript', {
+                script: `
                 // Store captured transaction URLs
                 window._transactionRequests = [];
                 
@@ -830,38 +848,41 @@ export async function testExampleCCItt(url: string, ppp: string) {
                 
                 return true;
               `,
-            args: []
-        });
+                args: []
+            });
 
-        console.log('Network interceptor installed', installres);
-    }
-        
-    await setupNetworkInterceptor();    
-    await geckoDriver.findElementAndClick('xpath', '//button[text()="Export"]');
-    //const buf = await geckoDriver.screenShoot();
-    //writeFileSync('d://temp//testsc.png', buf);
-    
-    let result: {
-        value: ExampleResult[];
-    } = { value: [] };
-    while (true) {
-        result = await geckoDriver.client.send('WebDriver:ExecuteScript', {
-            script: `
+            console.log('Network interceptor installed', installres);
+        }
+
+        await setupNetworkInterceptor();
+        await geckoDriver.findElementAndClick('xpath', '//button[text()="Export"]');
+        //const buf = await geckoDriver.screenShoot();
+        //writeFileSync('d://temp//testsc.png', buf);
+
+        let result: {
+            value: ExampleResult[];
+        } = { value: [] };
+        while (true) {
+            result = await geckoDriver.client.send('WebDriver:ExecuteScript', {
+                script: `
               const requests = window._transactionRequests || [];
               window._transactionRequests = [];  // Clear after reading
               return requests;
             `,
-            args: []
-        });
-        if (result.value.length > 0) break;
-        console.log('Waint for result');
-        await sleep(1000);
-    }
-       
-    //console.log('\n--- Getting page title after search ---');
-    //const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });     
-    geckoDriver.shutdown();
-    return result.value;
+                args: []
+            });
+            if (result.value.length > 0) break;
+            console.log('Waint for result');
+            await sleep(1000);
+        }
+
+        //console.log('\n--- Getting page title after search ---');
+        //const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });     
+        geckoDriver.shutdown();
+        return result.value;
+    });
+        
+    
 }
 
 
