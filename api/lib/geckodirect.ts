@@ -705,30 +705,30 @@ async function createGeckoDriver() {
      
 }
 // --- Example Usage ---
-export async function testtestmain(ppp: string): Promise<void> {
+export async function testExampleCCItt(url: string, ppp: string): Promise<void> {
     
 
-    const clk = await createGeckoDriver();
+    const geckoDriver = await createGeckoDriver();
     try {
         
-        await clk.goto('https://www.citi.com/');
+        await geckoDriver.goto(url);
         console.log('Navigated successfully.');
 
         // Add a small delay to ensure the page is fully loaded and elements are interactive
         //await new Promise(resolve => setTimeout(resolve, 2000));
 
-        let ele = await clk.findElement('css selector', 'input[id="password"]');
-        await clk.sendKeys(ele, ppp);
-        ele = await clk.findElement('css selector', 'button[id="signInBtn"]');
-        await clk.sendClick(ele);
+        let ele = await geckoDriver.findElement('css selector', 'input[id="password"]');
+        await geckoDriver.sendKeys(ele, ppp);
+        ele = await geckoDriver.findElement('css selector', 'button[id="signInBtn"]');
+        await geckoDriver.sendClick(ele);
 
-        await clk.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
-        await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
+        await geckoDriver.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
+        await geckoDriver.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
 
 
         async function setupNetworkInterceptor() {
             // Inject our interception script
-            const installres = await clk.client.send('WebDriver:ExecuteScript', {
+            const installres = await geckoDriver.client.send('WebDriver:ExecuteScript', {
                 script: `
                 // Store captured transaction URLs
                 window._transactionRequests = [];
@@ -753,10 +753,9 @@ export async function testtestmain(ppp: string): Promise<void> {
                     try {
                       const response = await originalFetch.apply(this, args);
                       const clone = response.clone();
-                      //const text = await clone.text();
-                      //console.log('sssss',text, url)
+                      const text = await clone.text();
                       
-                      window._transactionRequests[window._transactionRequests.length - 1].response = 'test';
+                      window._transactionRequests[window._transactionRequests.length - 1].response = text;
                       return response;
                     } catch (error) {
                       window._transactionRequests[window._transactionRequests.length - 1].error = error.message;
@@ -770,12 +769,10 @@ export async function testtestmain(ppp: string): Promise<void> {
                 // Intercept XHR requests
                 XMLHttpRequest.prototype.open = function(method, url) {
                   this._url = url;
-                  console.log('ddddddddddddd open', url)
                   return originalXHROpen.apply(this, arguments);
                 };
                 
                 XMLHttpRequest.prototype.send = function(body) {
-                console.log('ddddddddddddd send', this._url)
                   if (this._url.includes('transaction')) {
                     const requestData = {
                       type: 'xhr',
@@ -786,7 +783,7 @@ export async function testtestmain(ppp: string): Promise<void> {
                     
                     this.addEventListener('load', function() {
                     requestData.rtype = typeof this.response;
-                      requestData.response = this.response.text(); //this.responseText;
+                      requestData.response = this.responseText;
                       requestData.status = this.status;                      
                       window._transactionRequests.push(requestData);
                     });
@@ -809,11 +806,11 @@ export async function testtestmain(ppp: string): Promise<void> {
         }
         
         await setupNetworkInterceptor();
-        await clk.findElementAndClick('xpath', '//button[text()="Export"]');
-        const buf = await clk.screenShoot();
+        await geckoDriver.findElementAndClick('xpath', '//button[text()="Export"]');
+        const buf = await geckoDriver.screenShoot();
         writeFileSync('d://temp//testsc.png', buf);        
         
-        const result = await clk.client.send('WebDriver:ExecuteScript', {
+        const result = await geckoDriver.client.send('WebDriver:ExecuteScript', {
             script: `
               const requests = window._transactionRequests || [];
               window._transactionRequests = [];  // Clear after reading
@@ -830,7 +827,7 @@ export async function testtestmain(ppp: string): Promise<void> {
             //console.log('\n--- Getting page title after search ---');
             //const titleResponse: string = await client.send('WebDriver:GetTitle', { sessionId: sessionId });
             
-        clk.shutdown();
+        geckoDriver.shutdown();
 
     } catch (error: any) {
         console.error('\n--- Automation Error ---');
