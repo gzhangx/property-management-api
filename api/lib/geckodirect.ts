@@ -444,27 +444,27 @@ async function launchFirefoxAndConnectBiDi() {
     };
 
 
-    // const capabilities = {
-    //     firstMatch: undefined,
-    //     alwaysMatch: {
-    //         acceptInsecureCerts: false,
-    //         unhandledPromptBehavior: {
-    //             default: "ignore",
-    //         },
-    //         webSocketUrl: true,
-    //         "goog:prerenderingDisabled": true,
-    //     },
-    // };
-    // //don't do session here since we will be using marineette session
-    // const res = await sendCommand('session.new', { capabilities })
+    const capabilities = {
+        firstMatch: undefined,
+        alwaysMatch: {
+            acceptInsecureCerts: false,
+            unhandledPromptBehavior: {
+                default: "ignore",
+            },
+            webSocketUrl: true,
+            "goog:prerenderingDisabled": true,
+        },
+    };
+    //don't do session here since we will be using marineette session
+    const res = await sendCommand('session.new', { capabilities })
 
-    // // 1. Create a new browsing context (tab)
-    // console.log('Creating a new browsing context (tab)...');
-    // const newContextResult = await sendCommand('browsingContext.create', {
-    //     type: 'tab'
-    // });
-    // const contextId = newContextResult.context;
-    // console.log(`New browsing context created: ${contextId}`);
+    // 1. Create a new browsing context (tab)
+    console.log('Creating a new browsing context (tab)...');
+    const newContextResult = await sendCommand('browsingContext.create', {
+        type: 'tab'
+    });
+    const contextId = newContextResult.context;
+    console.log(`New browsing context created: ${contextId}`);
 
         
     // async function gotoUrl(url: string) {
@@ -517,6 +517,7 @@ async function launchFirefoxAndConnectBiDi() {
         sendCommand,
         doSessionSubcribeNetBeforeRequestSent,
         ws,
+        contextId,
     }
 
     //console.log('===============> added intercept', addinterceptpres)
@@ -541,7 +542,23 @@ async function launchFirefoxAndConnectBiDi() {
 
 // xpath: //input[@type='text'] or //div[@id='myContainer']/button
 async function createGeckoDriver() {
-    const wsOps = await launchFirefoxAndConnectBiDi();
+    const cfg = getPuppeterMainConfig();
+
+
+    // Arguments to launch Firefox with remote debugging enabled and a temporary profile
+    const firefoxArgs = [
+        '--marionette',
+        '--profile', cfg.PuppBrowserUserDataDir,
+        `--remote-debugging-port=0`, // Allows remote connections            
+        // Use --no-remote to prevent interference with existing Firefox instances
+        '--no-remote',
+        // '-headless', // Uncomment to run in headless mode
+    ];
+
+    const firefoxProcess = spawn(cfg.PuppBrowserExecPath, firefoxArgs, {
+        stdio: ['ignore', 'pipe', 'pipe'] // Capture stdout and stderr
+    });
+
     const client = new MarionetteClient('127.0.0.1', 2828); // Default Marionette port    
     
     await client.connect(); // Wait for connection
@@ -560,6 +577,7 @@ async function createGeckoDriver() {
     };
     const sessionResponse: { sessionId: string } = await client.send('WebDriver:NewSession', newSessionCommand);
     const sessionId: string = sessionResponse.sessionId;
+
     console.log(`Session created with ID: ${sessionId}`);
     async function findElement(type: FindEementUsing, value: string, timeout: number = 15000): Promise<ElementReference> {
         while (true) {
@@ -665,8 +683,7 @@ async function createGeckoDriver() {
         },
         sendMouseActions,
         disconnect: () => client.disconnect(),
-        shutdown: wsOps.shutdown,
-        wsOps,
+        shutdown: () => firefoxProcess.kill(),
     };
      
 }
@@ -691,31 +708,6 @@ export async function testtestmain(ppp: string): Promise<void> {
         await clk.findElementAndClick('css selector', 'button[id="bankAccountSelector0TileBody"]');
         await clk.findElementAndClick('css selector', 'div[aria-label="Export transactions"]');
 
-        await clk.wsOps.doSessionSubcribeNetBeforeRequestSent();
-        clk.wsOps.ws.on('message', data => {
-            const jsObj = JSON.parse(data.toString());
-            const { type, method, params } = jsObj;
-            if (type === 'event' && (method === 'network.beforeRequestSent')) {
-                console.log('ws msssgag: ' + method + ' ' + params.request.method, params.isBlocked, params.request.request);
-                //'context', 'isBlocked', 'navigation', 'redirectCount', 'request', 'timestamp', 'response'
-                if (params.request.url.indexOf('transactions/download') > 0) {                    
-                    const pr = params.request as { headers: any[], url: string; method: string; };
-                    const headers = pr.headers.reduce((acc, h) => {
-                        acc[h.name] = h.value.value;
-                        return acc;
-                    }, {});
-                    console.log('ws msssgag: ' + method + ' ' + params.request.method + ' ' + params.request.url, JSON.stringify(params, null, 2))
-                    fetch(pr.url, {
-                        method: pr.method,
-                        headers,
-                        body: JSON.stringify({ "keyword": "", "documentFormat": "CSV", "displayContentName": "DATE", "startRange": "2025-05-10", "endRange": "2025-06-13" })
-                    }).then(async r => {
-                        console.log('r', r);
-                        console.log('r', await r.text());
-                    })
-                }
-            }
-        })
         await clk.findElementAndClick('xpath', '//button[text()="Export"]');
         const buf = await clk.screenShoot();
         writeFileSync('d://temp//testsc.png', buf);        
