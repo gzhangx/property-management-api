@@ -630,8 +630,8 @@ export async function createGeckoDriverAndProcess<T>(processor?: (drv: VGInteral
                     });
                     return findButtonResponse;
                 } catch (err) {
-                    await sleep(500);
-                    timeout -= 500;
+                    await sleep(2000);
+                    timeout -= 2000;
                     if (timeout > 0) continue;
                     throw err;
                 }
