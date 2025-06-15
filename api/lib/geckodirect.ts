@@ -108,7 +108,7 @@ class MarionetteClient extends EventEmitter {
      * Establishes a TCP connection to the Marionette server.
      * @returns {Promise<void>} Resolves when connected, rejects on error.
      */
-    public connect(maxRetries: number = 10, retryDelay: number = 1000): Promise<void> {
+    public connect(processDeathCheck: ()=>number|null, maxRetries: number = 10, retryDelay: number = 1000): Promise<void> {
         return new Promise((resolve, reject) => {            
             let retryCount = 0;
 
@@ -137,6 +137,11 @@ class MarionetteClient extends EventEmitter {
                     }
 
                     if (retryCount < maxRetries) {
+                        if (processDeathCheck() !== null) {
+                            return reject({
+                                message: 'process died',
+                            });
+                        }
                         retryCount++;
                         console.log(`[MarionetteClient] Retrying connection (attempt ${retryCount}/${maxRetries}) in ${retryDelay / 1000} seconds...`);
                         setTimeout(connectAttempt, retryDelay);
@@ -318,243 +323,243 @@ function getElementId(response: ElementReference): string {
 type FindEementUsing = 'css selector' | 'id' | 'name' | 'xpath' | 'link text' | 'partial link text';
 
 
-async function launchFirefoxAndConnectBiDi() {
+// async function launchFirefoxAndConnectBiDi() {
 
-    const cfg = getPuppeterMainConfig();
+//     const cfg = getPuppeterMainConfig();
     
 
-    // Arguments to launch Firefox with remote debugging enabled and a temporary profile
-    const firefoxArgs = [
-        '--marionette',
-        '--profile', cfg.PuppBrowserUserDataDir,
-        `--remote-debugging-port=0`, // Allows remote connections            
-        // Use --no-remote to prevent interference with existing Firefox instances
-        '--no-remote',
-        // '-headless', // Uncomment to run in headless mode
-    ];
+//     // Arguments to launch Firefox with remote debugging enabled and a temporary profile
+//     const firefoxArgs = [
+//         '--marionette',
+//         '--profile', cfg.PuppBrowserUserDataDir,
+//         `--remote-debugging-port=0`, // Allows remote connections            
+//         // Use --no-remote to prevent interference with existing Firefox instances
+//         '--no-remote',
+//         // '-headless', // Uncomment to run in headless mode
+//     ];
 
-    const firefoxProcess = spawn(cfg.PuppBrowserExecPath, firefoxArgs, {
-        stdio: ['ignore', 'pipe', 'pipe'] // Capture stdout and stderr
-    });
+//     const firefoxProcess = spawn(cfg.PuppBrowserExecPath, firefoxArgs, {
+//         stdio: ['ignore', 'pipe', 'pipe'] // Capture stdout and stderr
+//     });
 
-    let outputBuffer = '';
-    const bidiUrlPromise = new Promise<string>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            reject(new Error('Timed out waiting for BiDi WebSocket URL from Firefox.'));
-        }, 30000); // 30 seconds timeout
+//     let outputBuffer = '';
+//     const bidiUrlPromise = new Promise<string>((resolve, reject) => {
+//         const timeout = setTimeout(() => {
+//             reject(new Error('Timed out waiting for BiDi WebSocket URL from Firefox.'));
+//         }, 30000); // 30 seconds timeout
 
-        firefoxProcess.stderr.on('data', (data) => {
-            outputBuffer += data.toString();
-            //console.log('frombrowser::::'+data.toString())
-            // Firefox typically outputs the BiDi URL to stderr
-            const match = outputBuffer.match(/WebDriver BiDi listening on (ws:\/\/[a-z0-9.]+:\d+)/);
-            if (match) {
-                clearTimeout(timeout);
-                resolve(match[1]);
-            }
-        });
+//         firefoxProcess.stderr.on('data', (data) => {
+//             outputBuffer += data.toString();
+//             //console.log('frombrowser::::'+data.toString())
+//             // Firefox typically outputs the BiDi URL to stderr
+//             const match = outputBuffer.match(/WebDriver BiDi listening on (ws:\/\/[a-z0-9.]+:\d+)/);
+//             if (match) {
+//                 clearTimeout(timeout);
+//                 resolve(match[1]);
+//             }
+//         });
 
-        //firefoxProcess.stdout.on('data', (data) => {                
-        //console.log('frombrowserstdut->::::' + data.toString())                
-        //});
+//         //firefoxProcess.stdout.on('data', (data) => {                
+//         //console.log('frombrowserstdut->::::' + data.toString())                
+//         //});
 
-        firefoxProcess.on('error', (err) => {
-            clearTimeout(timeout);
-            reject(new Error(`Failed to start Firefox process: ${err.message}. Is '${cfg.PuppBrowserExecPath}' correct?`));
-        });
+//         firefoxProcess.on('error', (err) => {
+//             clearTimeout(timeout);
+//             reject(new Error(`Failed to start Firefox process: ${err.message}. Is '${cfg.PuppBrowserExecPath}' correct?`));
+//         });
 
-        firefoxProcess.on('close', (code) => {
-            if (!outputBuffer.includes('WebDriver BiDi listening on')) {
-                clearTimeout(timeout);
-                reject(new Error(`Firefox closed unexpectedly before BiDi URL was found (Exit code: ${code}). Output:\n${outputBuffer}`));
-            }
-        });
-    });
+//         firefoxProcess.on('close', (code) => {
+//             if (!outputBuffer.includes('WebDriver BiDi listening on')) {
+//                 clearTimeout(timeout);
+//                 reject(new Error(`Firefox closed unexpectedly before BiDi URL was found (Exit code: ${code}). Output:\n${outputBuffer}`));
+//             }
+//         });
+//     });
 
-    const bidiUrl = await bidiUrlPromise;
-    console.log(`WebDriver BiDi URL found: ${bidiUrl}`);
+//     const bidiUrl = await bidiUrlPromise;
+//     console.log(`WebDriver BiDi URL found: ${bidiUrl}`);
 
-    // --- Connect to BiDi WebSocket ---
-    console.log('Connecting to BiDi WebSocket...');
-    const ws = new WebSocket(bidiUrl + '/session', {
-        followRedirects: true,
-        perMessageDeflate: false,
-        allowSynchronousEvents: false,
-        maxPayload: 256 * 1024 * 1024, // 256Mb
-        headers: {
-            //'User-Agent': `Puppeteer ${version_js_1.packageVersion}`,
-            //...headers,
-        },
-    });
+//     // --- Connect to BiDi WebSocket ---
+//     console.log('Connecting to BiDi WebSocket...');
+//     const ws = new WebSocket(bidiUrl + '/session', {
+//         followRedirects: true,
+//         perMessageDeflate: false,
+//         allowSynchronousEvents: false,
+//         maxPayload: 256 * 1024 * 1024, // 256Mb
+//         headers: {
+//             //'User-Agent': `Puppeteer ${version_js_1.packageVersion}`,
+//             //...headers,
+//         },
+//     });
 
-    await new Promise<void>((resolve, reject) => {
-        ws.onopen = () => {
-            console.log('WebSocket connection established.');
-            resolve();
-        };
-        ws.onerror = (error) => {
-            reject(new Error(`WebSocket error: ${error.message}`));
-        };
-        // ws.on('message', data => {
-        //     const jsObj = JSON.parse(data.toString());
-        //     const { type, method, params } = jsObj;
-        //     if (type === 'event' && (method === 'network.beforeRequestSent')) {
-        //         console.log('ws msssgag: ' + method + ' ' + params.request.method, params.isBlocked, params.request.request);
-        //         //'context', 'isBlocked', 'navigation', 'redirectCount', 'request', 'timestamp', 'response'
-        //         if (params.request.url.indexOf('transactions/download') > 0) {
-        //             console.log('NOT XCONTINEUDDD!!!!!!!!!!!!!!!!!!')
-        //             const pr = params.request as { headers: any[], url: string; method: string; };
-        //             const headers = pr.headers.reduce((acc, h) => {
-        //                 acc[h.name] = h.value.value;
-        //                 return acc;
-        //             }, {});
-        //             console.log('ws msssgag: ' + method + ' ' + params.request.method + ' ' + params.request.url, JSON.stringify(params, null, 2))
-        //             fetch(pr.url, {
-        //                 method: pr.method,
-        //                 headers,
-        //                 body: JSON.stringify({ "keyword": "", "documentFormat": "CSV", "displayContentName": "DATE", "startRange": "2025-05-10", "endRange": "2025-06-13" })
-        //             }).then(async r => {
-        //                 console.log('r', r);
-        //                 console.log('r', await r.text());
-        //             })
-        //         } else if (params.isBlocked) {
+//     await new Promise<void>((resolve, reject) => {
+//         ws.onopen = () => {
+//             console.log('WebSocket connection established.');
+//             resolve();
+//         };
+//         ws.onerror = (error) => {
+//             reject(new Error(`WebSocket error: ${error.message}`));
+//         };
+//         // ws.on('message', data => {
+//         //     const jsObj = JSON.parse(data.toString());
+//         //     const { type, method, params } = jsObj;
+//         //     if (type === 'event' && (method === 'network.beforeRequestSent')) {
+//         //         console.log('ws msssgag: ' + method + ' ' + params.request.method, params.isBlocked, params.request.request);
+//         //         //'context', 'isBlocked', 'navigation', 'redirectCount', 'request', 'timestamp', 'response'
+//         //         if (params.request.url.indexOf('transactions/download') > 0) {
+//         //             console.log('NOT XCONTINEUDDD!!!!!!!!!!!!!!!!!!')
+//         //             const pr = params.request as { headers: any[], url: string; method: string; };
+//         //             const headers = pr.headers.reduce((acc, h) => {
+//         //                 acc[h.name] = h.value.value;
+//         //                 return acc;
+//         //             }, {});
+//         //             console.log('ws msssgag: ' + method + ' ' + params.request.method + ' ' + params.request.url, JSON.stringify(params, null, 2))
+//         //             fetch(pr.url, {
+//         //                 method: pr.method,
+//         //                 headers,
+//         //                 body: JSON.stringify({ "keyword": "", "documentFormat": "CSV", "displayContentName": "DATE", "startRange": "2025-05-10", "endRange": "2025-06-13" })
+//         //             }).then(async r => {
+//         //                 console.log('r', r);
+//         //                 console.log('r', await r.text());
+//         //             })
+//         //         } else if (params.isBlocked) {
 
-        //             try {
-        //                 sendCommand('network.continueRequest', params.request).catch(err => {
-        //                     console.log('!!!!!!!!!!!!!!!!!!!!error continue request', params.request.request, params.request)
-        //                 })
-        //             } catch (err) {
-        //                 console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! continereq err', err)
-        //             }
+//         //             try {
+//         //                 sendCommand('network.continueRequest', params.request).catch(err => {
+//         //                     console.log('!!!!!!!!!!!!!!!!!!!!error continue request', params.request.request, params.request)
+//         //                 })
+//         //             } catch (err) {
+//         //                 console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! continereq err', err)
+//         //             }
 
-        //         }
-        //     }
-        // })
-        ws.onclose = () => {
-            console.log('WebSocket connection closed.');
-        };
-    });
+//         //         }
+//         //     }
+//         // })
+//         ws.onclose = () => {
+//             console.log('WebSocket connection closed.');
+//         };
+//     });
 
-    // --- Send BiDi Commands ---
-    let messageId = 1;
-    const sendCommand = (method: string, params: any) => {
-        const id = messageId++;
-        const message = JSON.stringify({ id, method, params });
-        console.log(`Sending BiDi command (ID: ${id}): ${method}`);
-        ws.send(message);
-        return new Promise<any>((resolve, reject) => {
-            const listener = (data: Buffer) => {
-                const response = JSON.parse(data.toString());
-                //console.log('debugremove bid resposne sendcmd rsp', response)
-                if (response.id === id) {
-                    if (response.error) {
-                        reject(new Error(`BiDi command error (ID: ${id}): ${response.error.message || JSON.stringify(response.error)}`));
-                    } else {
-                        resolve(response.result);
-                    }
-                    ws.off('message', listener); // Remove listener after response
-                }
-            };
-            ws.on('message', listener);
-        });
-    };
+//     // --- Send BiDi Commands ---
+//     let messageId = 1;
+//     const sendCommand = (method: string, params: any) => {
+//         const id = messageId++;
+//         const message = JSON.stringify({ id, method, params });
+//         console.log(`Sending BiDi command (ID: ${id}): ${method}`);
+//         ws.send(message);
+//         return new Promise<any>((resolve, reject) => {
+//             const listener = (data: Buffer) => {
+//                 const response = JSON.parse(data.toString());
+//                 //console.log('debugremove bid resposne sendcmd rsp', response)
+//                 if (response.id === id) {
+//                     if (response.error) {
+//                         reject(new Error(`BiDi command error (ID: ${id}): ${response.error.message || JSON.stringify(response.error)}`));
+//                     } else {
+//                         resolve(response.result);
+//                     }
+//                     ws.off('message', listener); // Remove listener after response
+//                 }
+//             };
+//             ws.on('message', listener);
+//         });
+//     };
 
 
-    const capabilities = {
-        firstMatch: undefined,
-        alwaysMatch: {
-            acceptInsecureCerts: false,
-            unhandledPromptBehavior: {
-                default: "ignore",
-            },
-            webSocketUrl: true,
-            "goog:prerenderingDisabled": true,
-        },
-    };
-    //don't do session here since we will be using marineette session
-    const res = await sendCommand('session.new', { capabilities })
+//     const capabilities = {
+//         firstMatch: undefined,
+//         alwaysMatch: {
+//             acceptInsecureCerts: false,
+//             unhandledPromptBehavior: {
+//                 default: "ignore",
+//             },
+//             webSocketUrl: true,
+//             "goog:prerenderingDisabled": true,
+//         },
+//     };
+//     //don't do session here since we will be using marineette session
+//     const res = await sendCommand('session.new', { capabilities })
 
-    // 1. Create a new browsing context (tab)
-    console.log('Creating a new browsing context (tab)...');
-    const newContextResult = await sendCommand('browsingContext.create', {
-        type: 'tab'
-    });
-    const contextId = newContextResult.context;
-    console.log(`New browsing context created: ${contextId}`);
+//     // 1. Create a new browsing context (tab)
+//     console.log('Creating a new browsing context (tab)...');
+//     const newContextResult = await sendCommand('browsingContext.create', {
+//         type: 'tab'
+//     });
+//     const contextId = newContextResult.context;
+//     console.log(`New browsing context created: ${contextId}`);
 
         
-    // async function gotoUrl(url: string) {
-    //     return await sendCommand('browsingContext.navigate', {
-    //         context: contextId,
-    //         url,
-    //         wait: 'complete' // Wait until the page is fully loaded
-    //     });
-    // }
+//     // async function gotoUrl(url: string) {
+//     //     return await sendCommand('browsingContext.navigate', {
+//     //         context: contextId,
+//     //         url,
+//     //         wait: 'complete' // Wait until the page is fully loaded
+//     //     });
+//     // }
 
-    // async function queryOneSelector(value: string) {
-    //     return await sendCommand('browsingContext.locateNodes', {
-    //         context: contextId,
-    //         locator: {
-    //             type: 'css',
-    //             value,
-    //         }
-    //     });
-    // }
+//     // async function queryOneSelector(value: string) {
+//     //     return await sendCommand('browsingContext.locateNodes', {
+//     //         context: contextId,
+//     //         locator: {
+//     //             type: 'css',
+//     //             value,
+//     //         }
+//     //     });
+//     // }
 
-    async function doSessionSubcribeNetBeforeRequestSent() {
-        await sendCommand('session.subscribe', {
-            events: [
-                //'browsingContext.load',
-                //'browsingContext.domContentLoaded',
-                //'network.responseCompleted',
-                'network.beforeRequestSent',
-                // You can add more events like:
-                // 'browsingContext.contextCreated',
-                // 'browsingContext.contextDestroyed',
-                // 'log.entryAdded', // For console logs
-                // 'network.responseCompleted', // For network requests
-            ]
-        });
-    }
-    function shutdown() {
-        if (ws) {
-            console.log('Closing WebSocket connection...');
-            ws.close();
-        }
-        if (firefoxProcess) {
-            console.log('Terminating Firefox process...');
-            firefoxProcess.kill(); // Send SIGTERM to the process
-        }
-    }
+//     async function doSessionSubcribeNetBeforeRequestSent() {
+//         await sendCommand('session.subscribe', {
+//             events: [
+//                 //'browsingContext.load',
+//                 //'browsingContext.domContentLoaded',
+//                 //'network.responseCompleted',
+//                 'network.beforeRequestSent',
+//                 // You can add more events like:
+//                 // 'browsingContext.contextCreated',
+//                 // 'browsingContext.contextDestroyed',
+//                 // 'log.entryAdded', // For console logs
+//                 // 'network.responseCompleted', // For network requests
+//             ]
+//         });
+//     }
+//     function shutdown() {
+//         if (ws) {
+//             console.log('Closing WebSocket connection...');
+//             ws.close();
+//         }
+//         if (firefoxProcess) {
+//             console.log('Terminating Firefox process...');
+//             firefoxProcess.kill(); // Send SIGTERM to the process
+//         }
+//     }
 
 
-    return {
-        shutdown,
-        sendCommand,
-        doSessionSubcribeNetBeforeRequestSent,
-        ws,
-        contextId,
-    }
+//     return {
+//         shutdown,
+//         sendCommand,
+//         doSessionSubcribeNetBeforeRequestSent,
+//         ws,
+//         contextId,
+//     }
 
-    //console.log('===============> added intercept', addinterceptpres)
-    // 2. Navigate to Google.com
+//     //console.log('===============> added intercept', addinterceptpres)
+//     // 2. Navigate to Google.com
         
-    //const gurlres = await gotoUrl('https://www.google.com');
+//     //const gurlres = await gotoUrl('https://www.google.com');
         
 
 
-    //https://www.w3.org/TR/webdriver-bidi/#cddl-type-browsingcontextlocator        
-    //const r = await queryOneSelector('input[id="password"]')        
+//     //https://www.w3.org/TR/webdriver-bidi/#cddl-type-browsingcontextlocator        
+//     //const r = await queryOneSelector('input[id="password"]')        
 
-    //await new Promise(resolve => setTimeout(resolve, 20000));
-    //const addinterceptpres = await sendCommand('network.addIntercept', {
-    //    phases: ['beforeRequestSent'], //'responseStarted', 
-    //    contexts: [contextId],
-    //    urlPatterns: []
-    //})
+//     //await new Promise(resolve => setTimeout(resolve, 20000));
+//     //const addinterceptpres = await sendCommand('network.addIntercept', {
+//     //    phases: ['beforeRequestSent'], //'responseStarted', 
+//     //    contexts: [contextId],
+//     //    urlPatterns: []
+//     //})
 
-    // Optional: Keep browser open for a few seconds before closing        
-}
+//     // Optional: Keep browser open for a few seconds before closing        
+// }
 
 // xpath: //input[@type='text'] or //div[@id='myContainer']/button
 export type VGInteralGeckoDriver = {
@@ -597,7 +602,7 @@ export async function createGeckoDriverAndProcess<T>(processor?: (drv: VGInteral
     try {
         const client = new MarionetteClient('127.0.0.1', 2828); // Default Marionette port    
     
-        await client.connect(); // Wait for connection
+        await client.connect(()=>firefoxProcess.exitCode); // Wait for connection
         // 1. Create a new WebDriver session within Marionette
         console.log('\n--- Creating new session ---');
         const sessionCapabilities: SessionCapabilities = {
