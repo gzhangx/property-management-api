@@ -16,6 +16,7 @@ export const rentPaymentInfo: IDBModel = {
             { field: 'houseID', desc: 'House', foreignKey: { table: 'houseInfo', field: 'houseID', resolvedToField: 'addressObj' } },            
             { field: 'leaseID', desc: 'Lease', foreignKey: { table: 'leaseInfo', field: 'leaseID' } },            
             { field: 'paymentProcessor', desc: 'Processor', },
+            { field: 'applyPaymentAfterDate', desc: 'Only count in balance after this date', type: 'datetime' },
         ],
         view:{
             name: 'view_rentPaymentInfo',
