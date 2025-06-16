@@ -13,6 +13,8 @@ export const ownerInfo: IDBModel = {
             { field: 'state', desc: 'State' },
             { field: 'zip', desc: 'Zip' },
             { field: 'email',desc: 'Email',},
-            { field: 'phone',desc: 'Phone',},
+            { field: 'phone', desc: 'Phone', },
+            { field: 'smtpEmailUser', desc: 'Smtp Email User', },
+            { field: 'smtpEmailPass', desc: 'Smtp Email Password', },
         ]
 };
