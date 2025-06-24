@@ -1,5 +1,9 @@
+//-----BEGIN OPENSSH PRIVATE KEY-----, need to convert it:
+//ssh-keygen -p -m PEM -f id_rsa
+
 const Client = require('ssh2').Client;
 
+const privateKey = require('fs').readFileSync('../id_rsa').toString();
 const conn = new Client();
 conn.on('ready', async function() {
     console.log('Client :: ready');
@@ -28,5 +32,6 @@ conn.on('ready', async function() {
   host: '192.168.0.40',
   port: 22,
   username: 'pi',
-  privateKey: require('fs').readFileSync('../id_rsa')
+  privateKey,
+  passpharse: '',
 });

@@ -39,7 +39,7 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "restify": "^11.1.0",
-    "ssh2": "^1.7.0",
+    "ssh2": "^1.16.0",
     "uuid": "^8.3.2",
     "ws": "^8.18.2"
   },
