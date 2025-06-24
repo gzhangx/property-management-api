@@ -36,3 +36,8 @@ sudo nginx -t
 sudo systemctl reload nginx					
 sudo ln -s /etc/nginx/sites-available/pmapi.conf /etc/nginx/sites-enabled/					
 sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/ssl/private/ssl-cert-snakeoil.key -out /etc/ssl/certs/ssl-cert-snakeoil.pem					
+
+insert into userInfo(userID, username, password, Name, timezone) values('u1','xx@hotmail.com','1','xx','America/New_York');							
+insert into paymentType (paymentTypeName) values('Rent');							
+insert into paymentType (paymentTypeName) values('Deposit');							
+ insert into paymentType (paymentTypeName) values('Other');							
