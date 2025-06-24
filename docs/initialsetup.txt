@@ -41,3 +41,7 @@ insert into userInfo(userID, username, password, Name, timezone) values('u1','xx
 insert into paymentType (paymentTypeName) values('Rent');							
 insert into paymentType (paymentTypeName) values('Deposit');							
  insert into paymentType (paymentTypeName) values('Other');							
+
+
+
+ https://support.google.com/mail/answer/185833?sjid=899454228926562036-NA					google app password	
