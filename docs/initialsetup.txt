@@ -1,0 +1,38 @@
+ssh-keygen		chmod 700 .ssh	cd .ssh	cp id_rsa.pub authorized_keys		chmod 644 .ssh/authorized_keys		copy both id_rsa and id_rsa.pub to windows
+sudo apt install mariadb-server								
+
+{
+  "mysql": {
+    "host": "192.168.0.xx",
+    "user": "xxx",
+    "password": "xxx",
+    "database": "PM"
+  },
+  "PuppConfig":{
+    "pi":{
+      "PuppBrowserExecPath":"/home/pi/work/fbin/firefox",
+      "PuppBrowserUserDataDir": "/home/pi/work/tempData/fprofile",
+      "PuppBrowserDownloadDir": "/home/pi/work/tempData/fdownload"
+    },
+    "notPI": {
+      "PuppBrowserExecPath":"/gecko-dev/obj-x86_64-pc-windows-msvc/dist/bin/firefox.exe",
+      "PuppBrowserUserDataDir": "/temp/testpf",
+      "PuppBrowserDownloadDir": "/temp/fdownload"
+    }
+  }
+}
+
+
+sudo apt install nodejs			pmapi.json
+sudo apt install npm			
+creds/pienv.txt		PI=true	
+
+
+sudo vi /etc/mysql/mariadb.conf.d/50-server.cnf				bind-address            = 0.0.0.0	
+sudo apt install nginx					
+					
+sudo cp pmapi.conf /etc/nginx/sites-available/					
+sudo nginx -t					
+sudo systemctl reload nginx					
+sudo ln -s /etc/nginx/sites-available/pmapi.conf /etc/nginx/sites-enabled/					
+sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/ssl/private/ssl-cert-snakeoil.key -out /etc/ssl/certs/ssl-cert-snakeoil.pem					
